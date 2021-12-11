@@ -1,0 +1,13 @@
+*.out
+main
+httpc
+httpccc
+public
+public__pycache
+test
+tests
+*.q
+*.bak
+*.bak2
+.vscode
+
