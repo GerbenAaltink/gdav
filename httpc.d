@@ -742,6 +742,7 @@ httpc: \
  /usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
  request.h \
  /usr/local/lib/tcc/include/stdbool.h \
+ config.h \
  url.h \
  server.c \
  /usr/local/lib/tcc/include/stdbool.h \

@@ -61,19 +61,18 @@ int handle_read(Client* client)
     if (recvLength < 1) {
         return recvLength;
     }
-    data[recvLength] = 0;
+    //data[recvLength] = 0;
     
     client->received += recvLength; 
     if (client->progress->busy == 0) {
         strcat(client->buffer, data);
         if (str_index(client->buffer, "\r\n\r\n") != -1) {
-            client->request = parseRequest(client->buffer);
+            parseRequest(recvLength, client->buffer, client->request);
             client->hasRequest = true;
             LOG_INFO("%s %s %s\n", client->request->method, client->request->path,
                 client->name);
             client->progress->busy = 1;
             bzero(client->buffer, sizeof(client->buffer));
-            
             client->request->bytesLeft = recvLength - strlen(client->request->headers);           
             if (client->request->isPropfind) {
                 drain(client);
@@ -81,7 +80,7 @@ int handle_read(Client* client)
 
         }
     } else {
-        strcpy(client->request->body, data);
+        memcpy(client->request->body, data, recvLength);
         client->request->bytesLeft = recvLength;
     }
 

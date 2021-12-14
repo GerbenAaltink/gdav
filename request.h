@@ -1,5 +1,6 @@
 #pragma once
 #include <stdbool.h>
+#include "config.h"
 
 typedef enum RequestMethod {
     RM_NONE,
@@ -30,7 +31,7 @@ typedef struct Request {
     bool keepAlive;
     RequestMethod route;
     size_t contentLength;
-    char body[4069];
+    char body[REQUEST_MAX_LENGTH];
     long bytesLeft;
     size_t bodyReceived;
     size_t range_start;
@@ -46,4 +47,4 @@ void getHeaders(char* data, char* result);
 void getHeaderValue(char* pheaders, char* name, char* result);
 void dumpRequest(Request* request);
 void resetRequest(Request* request);
-Request* parseRequest(char* data);
+Request* parseRequest(int received, char* data, Request * request);

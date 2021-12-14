@@ -73,12 +73,9 @@ void resetRequest(Request* request)
     return;
 }
 
-Request* parseRequest(char* data)
+Request* parseRequest(int received, char* data, Request * request)
 {
-    Request* request = malloc(sizeof(Request));
     const char* token = " ";
-
-    int received = strlen(data);
 
     getHeaders(data, request->headers);
     
@@ -92,8 +89,7 @@ Request* parseRequest(char* data)
     char* body = safe_strstr(data, "\r\n\r\n");
     
     if (str_index(body, "\r\n\r\n") != -1) {
-        strcpy(request->body, body + 4);
-        
+        memcpy(request->body, body + 4, received - strlen(request->headers));
     }
 
     //BUGG!: request->bytesLeft = strlen(request->body); 
@@ -109,6 +105,7 @@ Request* parseRequest(char* data)
     request->is_range = strlen(request->range) > 0;
     if(request->is_range){
         sscanf(request->range, "bytes=%zu-%zu", &request->range_start, &request->range_end);
+        // Weghalen -> TESTEN
         if(request->range_end == 1)
             request->range_end = 0;
     }
