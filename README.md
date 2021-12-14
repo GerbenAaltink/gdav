@@ -25,12 +25,12 @@ By smart chunking requests do not block eachother.
  - LOCK
 
 ### Backlog:
- - Cleaner mime type resolver. Most content is worthless.
  - Add created timestamp to PROPFIND
  - Add last modified timestamp to PROPFIND
- - Add disk usage information to propfind 
- - Fix PROPFIND root directory
- - Allow empty files for PUT (create)
+ - Add disk usage information to PROPFIND 
+ - Fix PROPFIND root directory. / does not work.
  - Make index page more beautiful. Also sort files
  - Lock meganism
- - Mimetypes en URL encoder apart releasen
+ - Create gist for Mimetype
+ - Create gist for url encoder/decoder 
+
