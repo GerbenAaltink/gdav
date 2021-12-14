@@ -15,7 +15,7 @@ build:
 
 static:
 	cd static/
-	./build.py
+	make
 	cd ..
 	#cc *.c -static -o httpc-static
 

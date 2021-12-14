@@ -302,9 +302,9 @@ httpc: \
  malloc.h \
  mimetype.h \
  path.h \
+ static/static.h \
  /usr/include/x86_64-linux-gnu/sys/stat.h \
  /usr/include/x86_64-linux-gnu/bits/stat.h \
- static/static.h \
  humanize.c \
  /usr/include/string.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
@@ -870,6 +870,7 @@ httpc: \
  config.h \
  log.h \
  request.h \
+ /usr/local/lib/tcc/include/stdbool.h \
  /usr/include/stdlib.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h \
@@ -918,7 +919,6 @@ httpc: \
  /usr/include/alloca.h \
  /usr/local/lib/tcc/include/stddef.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
- /usr/local/lib/tcc/include/stdbool.h \
  stats.h \
  /usr/include/arpa/inet.h \
  /usr/include/netinet/in.h \
@@ -1178,15 +1178,15 @@ httpc: \
  static/static.h \
  static/urls.h \
  static/index_html.h \
- static/vuetify_js.h \
  static/materialdesignicons_css_map.h \
- static/vuetify_js_map.h \
  static/materialdesignicons_min_css.h \
  static/roboto_100_300_400_500_700_900_css.h \
- static/vuetify_min_css.h \
  static/vue_js.h \
+ static/vuetify_js.h \
+ static/vuetify_js_map.h \
+ static/vuetify_min_css.h \
  /usr/local/lib/tcc/include/stdbool.h \
- /usr/include/string.h \
+ /usr/include/stdlib.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h \
  /usr/include/stdc-predef.h \
@@ -1195,13 +1195,6 @@ httpc: \
  /usr/include/x86_64-linux-gnu/bits/long-double.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
- /usr/local/lib/tcc/include/stddef.h \
- /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
- /usr/include/strings.h \
- /usr/local/lib/tcc/include/stddef.h \
- /usr/include/stdlib.h \
- /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/local/lib/tcc/include/stddef.h \
  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
@@ -1241,6 +1234,13 @@ httpc: \
  /usr/include/alloca.h \
  /usr/local/lib/tcc/include/stddef.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/string.h \
+ /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+ /usr/local/lib/tcc/include/stddef.h \
+ /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+ /usr/include/strings.h \
+ /usr/local/lib/tcc/include/stddef.h \
  /usr/lib/x86_64-linux-gnu/libc.so \
  /lib/x86_64-linux-gnu/libc.so.6 \
  /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2 \

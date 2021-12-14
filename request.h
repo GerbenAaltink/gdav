@@ -1,7 +1,7 @@
 #pragma once
 #include "config.h"
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 typedef enum RequestMethod {
     RM_NONE,
