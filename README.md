@@ -33,4 +33,4 @@ By smart chunking requests do not block eachother.
  - Lock meganism
  - Create gist for Mimetype
  - Create gist for url encoder/decoder 
-
+ - Clean up request.c (Range header bug, strcpy for body should be memcpy, received is unused, tokenizedData can be pointer(saves a copy), remove commented code)
