@@ -42,6 +42,9 @@ link:
 
 all: link build static shared
 
+format:
+	clang-format -i -style=WebKit *.c *.h
+			
 bench_propfind:
 	$(BENCHMARK) -m PROPFIND http://localhost:8888/public/
 

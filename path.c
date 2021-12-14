@@ -1,10 +1,10 @@
 #include <string.h>
 
-#include "path.h"
 #include "malloc.h"
+#include "path.h"
 
-#include <sys/stat.h>
 #include "mimetype.h"
+#include <sys/stat.h>
 
 Path* path_info(char* path)
 {
@@ -12,7 +12,7 @@ Path* path_info(char* path)
     Path* result = (Path*)httpc_malloc(sizeof(Path));
     result->extension = strchr(path, '.');
     result->name = strrchr(path, '/');
-    
+
     if (result->name == NULL) {
         result->name = path;
     } else {
@@ -20,7 +20,7 @@ Path* path_info(char* path)
     }
     result->path = path;
     result->relativePath = path;
-    if(result->relativePath[0] == '/')
+    if (result->relativePath[0] == '/')
         result->relativePath++;
     struct stat stbuf;
     if (stat(path, &stbuf) == -1) {

@@ -1,9 +1,9 @@
-#include <string.h>
 #include <ctype.h>
-#include <stdio.h>
-#include <stdbool.h>
 #include <math.h>
-const char *URL_SPECIAL_CHARACTERS = "$%[]\\+=<>\"'~() ";
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+const char* URL_SPECIAL_CHARACTERS = "$%[]\\+=<>\"'~() ";
 
 bool is_special_url_char(char chr)
 {
@@ -23,28 +23,24 @@ int hex2int(char ch)
         return ch - 'a' + 10;
     return -1;
 }
-char hex2intstr(char *str)
+char hex2intstr(char* str)
 {
     return hex2int(str[0]) * 16 + hex2int(str[1]);
 }
 
-const char *url_decode(char *url)
+const char* url_decode(char* url)
 {
     static char result[4096];
     result[0] = 0;
-    for (int i = 0; i < strlen(url); i++)
-    {
+    for (int i = 0; i < strlen(url); i++) {
         char append[10];
-        if (url[i] == '%')
-        {
+        if (url[i] == '%') {
             char buff[2];
             buff[0] = url[i + 1];
             buff[1] = url[i + 2];
             sprintf(append, "%c", hex2intstr(buff));
             i += 2;
-        }
-        else
-        {
+        } else {
             sprintf(append, "%c", url[i]);
         }
         strcat(result, append);
@@ -52,21 +48,17 @@ const char *url_decode(char *url)
     return result;
 }
 
-const char *url_encode(char *url)
+const char* url_encode(char* url)
 {
     static char result[4096];
     result[0] = 0;
-    for (int i = 0; i < strlen(url); i++)
-    {
+    for (int i = 0; i < strlen(url); i++) {
         char chr = url[i];
         char append[10];
-        if (is_special_url_char(chr))
-        {
+        if (is_special_url_char(chr)) {
             sprintf(append, "%%%x", chr);
             append[2] = toupper(append[2]);
-        }
-        else
-        {
+        } else {
             sprintf(append, "%c", chr);
         }
         strcat(result, append);

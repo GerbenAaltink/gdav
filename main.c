@@ -1,16 +1,15 @@
+#include "args.h"
+#include "humanize.h"
 #include "log.h"
+#include "malloc.h"
 #include "server.h"
 #include "stats.h"
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "malloc.h"
-#include "humanize.h"
-#include "args.h"
 
 #define SEND_FILE_BUFFER_SIZE 4096
-
 
 void set_log_level_arg(int argc, char* argv[])
 {
@@ -23,10 +22,10 @@ void set_log_level_arg(int argc, char* argv[])
 void exit_handler(int signum)
 {
     printf("%s\n", strstat(stats));
-    char * humanized_allocated = humanize_bytes(httpc_allocated);
-    char * humanized_freed = humanize_bytes(httpc_freed);
-    char * humanized_allocated_max = humanize_bytes(httpc_allocated_max);
-    
+    char* humanized_allocated = humanize_bytes(httpc_allocated);
+    char* humanized_freed = humanize_bytes(httpc_freed);
+    char* humanized_allocated_max = humanize_bytes(httpc_allocated_max);
+
     printf("Allocated:\t%s\tFreed:\t%s\tMax usage:\t%s\n", humanized_allocated, humanized_freed, humanized_allocated_max);
     free(humanized_allocated);
     free(humanized_freed);
@@ -34,9 +33,8 @@ void exit_handler(int signum)
     exit(0);
 }
 
-
-
-void helptext() {
+void helptext()
+{
     printf("WebDav Server - Gerben Aaltink - %s %s\n\n", __DATE__, __TIME__);
     printf("[PORT]          Port number. Defuults to 8888.\n");
     printf("--log-recv      Log data received from client.\n");
@@ -45,7 +43,6 @@ void helptext() {
     printf("--info          Show info messages.\n");
     printf("--error         Show only errors. Production mode.\n");
     printf("--stats         Show stats after every closing connection.\n\n");
-
 }
 
 #ifndef TESTING

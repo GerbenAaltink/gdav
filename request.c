@@ -1,6 +1,6 @@
-#include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "request.h"
 #include "url.h"
@@ -67,18 +67,18 @@ void dumpRequest(Request* request)
 
 void resetRequest(Request* request)
 {
-    bzero(request->headers,sizeof(request->headers));
+    bzero(request->headers, sizeof(request->headers));
     //free(request);
     //request = (Request*)malloc(sizeof(Request));
     return;
 }
 
-Request* parseRequest(int received, char* data, Request * request)
+Request* parseRequest(int received, char* data, Request* request)
 {
     const char* token = " ";
 
     getHeaders(data, request->headers);
-    
+
     char tokenizeData[strlen(data) + 1];
     strcpy(tokenizeData, data);
 
@@ -87,12 +87,12 @@ Request* parseRequest(int received, char* data, Request * request)
     strcpy(request->relativePath, request->path + 1);
     strcpy(request->version, strtok(NULL, "\r\n"));
     char* body = safe_strstr(data, "\r\n\r\n");
-    
+
     if (str_index(body, "\r\n\r\n") != -1) {
         memcpy(request->body, body + 4, received - strlen(request->headers));
     }
 
-    //BUGG!: request->bytesLeft = strlen(request->body); 
+    //BUGG!: request->bytesLeft = strlen(request->body);
     request->isGet = strncmp(request->method, "GET", 3) == 0;
     request->isPropfind = strncmp(request->method, "PROPFIND", 8) == 0;
     request->isOptions = strncmp(request->method, "OPTIONS", 7) == 0;
@@ -100,16 +100,16 @@ Request* parseRequest(int received, char* data, Request * request)
     request->isDelete = strncmp(request->method, "DELETE", 6) == 0;
     request->isHead = strncmp(request->method, "HEAD", 4) == 0;
     request->isMkcol = strncmp(request->method, "MKCOL", 5) == 0;
-   
+
     getHeaderValue(request->headers, "Range", request->range);
     request->is_range = strlen(request->range) > 0;
-    if(request->is_range){
+    if (request->is_range) {
         sscanf(request->range, "bytes=%zu-%zu", &request->range_start, &request->range_end);
         // Weghalen -> TESTEN
-        if(request->range_end == 1)
+        if (request->range_end == 1)
             request->range_end = 0;
     }
-    
+
     getHeaderValue(request->headers, "Depth", request->depth);
 
     getHeaderValue(request->headers, "User-Agent", request->userAgent);

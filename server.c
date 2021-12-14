@@ -1,8 +1,8 @@
 #include <stdbool.h>
 
-#include "server.h"
 #include "http.h"
 #include "log.h"
+#include "server.h"
 
 void handle_write(Client* client)
 {
@@ -31,7 +31,7 @@ void handle_write(Client* client)
     }
     LOG_DEBUG("Done %d %s %s %s\n", close, client->request->method,
         client->request->path, client->name);
-            
+
     client->request->bytesLeft = 0;
     if (close == 0) {
         client->progress->busy = true;
@@ -45,14 +45,14 @@ void handle_write(Client* client)
 
 int handle_read(Client* client)
 {
-    
+
     int buffSize = SOCKET_READ_BUFFER_SIZE;
     if (client->progress->busy == true) {
-        if(client->request->contentLength - client->progress->size < SOCKET_READ_BUFFER_SIZE)
+        if (client->request->contentLength - client->progress->size < SOCKET_READ_BUFFER_SIZE)
             buffSize = client->request->contentLength - client->progress->size;
     }
     char data[buffSize + 1];
-    
+
     //bzero(data, buffSize + 1);
     LOG_DEBUG("Reading: %s\n", client->name);
     int recvLength = receive(
@@ -62,8 +62,8 @@ int handle_read(Client* client)
         return recvLength;
     }
     //data[recvLength] = 0;
-    
-    client->received += recvLength; 
+
+    client->received += recvLength;
     if (client->progress->busy == 0) {
         strcat(client->buffer, data);
         if (str_index(client->buffer, "\r\n\r\n") != -1) {
@@ -73,11 +73,10 @@ int handle_read(Client* client)
                 client->name);
             client->progress->busy = 1;
             bzero(client->buffer, sizeof(client->buffer));
-            client->request->bytesLeft = recvLength - strlen(client->request->headers);           
+            client->request->bytesLeft = recvLength - strlen(client->request->headers);
             if (client->request->isPropfind) {
                 drain(client);
             }
-
         }
     } else {
         memcpy(client->request->body, data, recvLength);
@@ -100,9 +99,9 @@ int serve(const char* host, const char* port)
             }
             LOG_INFO("Connected: %s\n", client->name);
         }
-        Client * client = clients;
+        Client* client = clients;
         while (client) {
-            Client * next = client->next;
+            Client* next = client->next;
             if (FD_ISSET(client->socket, &selected->errors)) {
                 drop_client(client);
                 client = next;
@@ -116,15 +115,11 @@ int serve(const char* host, const char* port)
                     continue;
                 }
             }
-            
+
             if (client->progress->busy == true && FD_ISSET(client->socket, &selected->writers)) {
                 handle_write(client);
             }
 
-               
-            
-
-            
             client = next;
         }
         free(selected);

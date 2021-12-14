@@ -2,7 +2,7 @@
 #include "sockets.h"
 #include "malloc.h"
 
-extern Client * clients;
+extern Client* clients;
 
 int shield(int val)
 {
@@ -78,8 +78,7 @@ int sendAll(Client* client, char* data)
 
         if (LOG_SEND)
             LOG_DEBUG("send (%d/%d): '%s'\n", sent, toSend, data + sent);
-        
-        
+
         sent += chunkSize;
         client->bytesSent += chunkSize;
     }
@@ -93,12 +92,11 @@ int sendAllN(Client* client, char* data, int toSend)
     while (sent < toSend) {
         int chunkSize = send(client->socket, data + sent, toSend - sent, 0);
 
-
         if (chunkSize < 1) {
             LOG_ERROR("sendAll error: %s\n", strerror(errno));
             return chunkSize;
         }
-        
+
         sent += chunkSize;
         client->bytesSent += chunkSize;
     }
@@ -139,7 +137,7 @@ Client* get_client(SOCKET s)
     n->buffer[0] = 0;
     n->writeCount = 0;
     n->readCount = 0;
-    n->request = (Request *)calloc(1, sizeof(Request));
+    n->request = (Request*)calloc(1, sizeof(Request));
 
     if (!n) {
         LOG_ERROR("Out of memory\n");
@@ -188,7 +186,7 @@ void drop_client(struct client_info* client)
         if (*p == client) {
             LOG_DEBUG("Closed: %s Count: %d\n", client->name, connection_count);
             if (LOG_STATS)
-                LOG_INFO("%s\n", strstat(stats));      
+                LOG_INFO("%s\n", strstat(stats));
             free(client->request);
             free(client->progress);
             free(client->buffer);
@@ -205,14 +203,14 @@ void drop_client(struct client_info* client)
 struct select_result* wait_on_clients(SOCKET server)
 {
     struct select_result* result = (select_result*)malloc(sizeof(select_result));
-    
+
     FD_ZERO(&result->readers);
     FD_ZERO(&result->writers);
     FD_ZERO(&result->errors);
     FD_SET(server, &result->readers);
-    
+
     SOCKET max_socket = server;
-    
+
     struct client_info* ci = clients;
     while (ci) {
         FD_SET(ci->socket, &result->readers);
@@ -230,7 +228,6 @@ struct select_result* wait_on_clients(SOCKET server)
     }
     return result;
 }
-
 
 char* recv_until(int fd, char* needle)
 {

@@ -1,19 +1,19 @@
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "html.h"
 #include "functions.h"
-#include <dirent.h>
 #include "url.h"
+#include <dirent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-size_t html_index(char * document, char * path) {
+size_t html_index(char* document, char* path)
+{
     char normalized_path[2048];
     normalized_path[0] = 0;
     strcpy(normalized_path, path);
-    
-    if(path[strlen(normalized_path)] != '/')
-    {
+
+    if (path[strlen(normalized_path)] != '/') {
         strcat(normalized_path, "/");
     }
 
@@ -23,10 +23,10 @@ size_t html_index(char * document, char * path) {
     csprintf(document, "%s", "</HEAD>");
     csprintf(document, "<BODY>");
     csprintf(document, "<b>%s</b><br />\n", path);
-    DIR * dir = opendir(path);
-    struct dirent * d;
-    while((d = readdir(dir)) != NULL){
-        if(!strcmp(d->d_name, ".") || !strcmp(d->d_name, ".."))
+    DIR* dir = opendir(path);
+    struct dirent* d;
+    while ((d = readdir(dir)) != NULL) {
+        if (!strcmp(d->d_name, ".") || !strcmp(d->d_name, ".."))
             continue;
         char full_path[2048];
         full_path[0] = 0;

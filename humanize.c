@@ -1,7 +1,7 @@
 #include <string.h>
 
-#include <stdio.h>
 #include "humanize.h"
+#include <stdio.h>
 
 char* humanize_bytes(size_t bytes)
 {

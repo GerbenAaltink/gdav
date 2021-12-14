@@ -1,12 +1,12 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "xml.h"
+#include "functions.h"
 #include "malloc.h"
 #include "path.h"
-#include "functions.h"
 #include "url.h"
+#include "xml.h"
 
 int write_xml_node(char* dest, char* name, char* value)
 {

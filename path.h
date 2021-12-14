@@ -16,4 +16,4 @@ typedef struct Path {
 
 Path* path_info(char* path);
 
-void free_path(Path * path);
+void free_path(Path* path);

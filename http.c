@@ -1,16 +1,16 @@
-#include <string.h>
 #include "xml.h"
 #include <dirent.h>
 #include <stdio.h>
+#include <string.h>
 
+#include "functions.h"
+#include "html.h"
 #include "http.h"
+#include "log.h"
 #include "malloc.h"
+#include "mimetype.h"
 #include "path.h"
 #include <sys/stat.h>
-#include "functions.h"
-#include "log.h"
-#include "mimetype.h"
-#include "html.h"
 
 HTTP_STATUS http_status_response(Client* client, int status, char* message,
     char* body)
@@ -32,13 +32,15 @@ HTTP_STATUS http_response_404(Client* client)
     return http_status_response(client, 404, "Not Found", "Not Found");
 }
 
-HTTP_STATUS http_html_index(Client* client){
-    char document[1024*1024];
+HTTP_STATUS http_html_index(Client* client)
+{
+    char document[1024 * 1024];
     size_t content_length = html_index(document, client->request->relativePath);
-    char response[1024*1024];
+    char response[1024 * 1024];
     sprintf(response, "HTTP/1.1 200 OK\r\n"
-                     "Content-Length: %zu\r\n"
-                     "Content-Type: text/html\r\n\r\n%s", content_length, document);
+                      "Content-Length: %zu\r\n"
+                      "Content-Type: text/html\r\n\r\n%s",
+        content_length, document);
     return sendAll(client, response) > 0 ? HTTP_OK : HTTP_ERROR;
 }
 
@@ -117,21 +119,19 @@ int drain(Client* client)
 HTTP_STATUS http_put(struct client_info* client)
 {
 
-    if(client->request->bytesLeft == 0 && client->request->contentLength != 0){
+    if (client->request->bytesLeft == 0 && client->request->contentLength != 0) {
         // No data received
         return 0;
     }
- 
+
     Path* info = path_info(client->request->relativePath);
     bool exists = info->exists;
 
-
-    if(!exists){
-        FILE *f = fopen(info->relativePath, "w+");
+    if (!exists) {
+        FILE* f = fopen(info->relativePath, "w+");
         fclose(f);
-
     }
-    
+
     if (client->progress->size != client->request->contentLength && client->request->bytesLeft) {
         if (exists && client->progress->size == 0) {
             unlink(info->relativePath);
@@ -144,8 +144,8 @@ HTTP_STATUS http_put(struct client_info* client)
 
         fclose(fd);
     }
-    
-    LOG_DEBUG("#%d PUT %zu/%zu/%zu/%zu/%zu\n",client->socket, client->bodyReceived, client->progress->size, client->request->contentLength,client->received, strlen(client->request->headers));
+
+    LOG_DEBUG("#%d PUT %zu/%zu/%zu/%zu/%zu\n", client->socket, client->bodyReceived, client->progress->size, client->request->contentLength, client->received, strlen(client->request->headers));
     httpc_free(info);
     if (client->progress->size == client->request->contentLength) {
 
@@ -174,14 +174,12 @@ bool valid_path(char* pName)
     return strcmp(pName, ".") != 0 && strcmp(pName, "..") != 0;
 }
 
-
 int http_propfind(struct client_info* client)
 {
 
     char* path = client->request->relativePath;
     Path* info = path_info(path);
-    if (info->exists == false)
-    {
+    if (info->exists == false) {
         httpc_free(info);
         return http_response_404(client);
     }
@@ -252,22 +250,21 @@ HTTP_STATUS http_route_get(Client* client)
     if (!exists) {
         return http_response_404(client);
     }
-    if(is_dir){
+    if (is_dir) {
         return http_html_index(client);
     }
 
     char buffer[65];
-   
+
     size_t range_end = client->request->is_range && client->request->range_end > 0 ? client->request->range_end : fileSize - 1;
-    size_t content_length = client->request->is_range ? range_end - client->request->range_start + 1: fileSize;
-    
+    size_t content_length = client->request->is_range ? range_end - client->request->range_start + 1 : fileSize;
+
     if (client->progress->size == 0) {
 
         int http_status = client->request->is_range ? 206 : 200;
         sprintf(buffer, "HTTP/1.1 %d OK\r\n", http_status);
         if (sendAll(client, buffer) < 1)
             return 2;
-        
 
         sprintf(buffer, "Content-Length: %zu\r\n", content_length);
         if (sendAll(client, buffer) < 1)
@@ -277,14 +274,14 @@ HTTP_STATUS http_route_get(Client* client)
             get_mimetype(client->request->path));
         if (sendAll(client, buffer) < 1)
             return 2;
-        
+
         sprintf(buffer, "Accept-Ranges: bytes\r\n");
-        if(sendAll(client, buffer) < 1)
+        if (sendAll(client, buffer) < 1)
             return 2;
 
-        if(client->request->is_range){
+        if (client->request->is_range) {
             sprintf(buffer, "Content-Range: bytes %zu-%zu/%zu\r\n", client->request->range_start, range_end, fileSize);
-            if(sendAll(client, buffer) < 1)
+            if (sendAll(client, buffer) < 1)
                 return 2;
         }
 
@@ -298,7 +295,7 @@ HTTP_STATUS http_route_get(Client* client)
         size_t offset = client->request->is_range ? client->request->range_start : 0;
         fseek(fd, offset + client->progress->size, SEEK_SET);
         int buffSize = SOCKET_WRITE_BUFFER_SIZE > content_length - client->progress->size
-            ? content_length - client->progress->size 
+            ? content_length - client->progress->size
             : SOCKET_WRITE_BUFFER_SIZE;
         char buff[SOCKET_WRITE_BUFFER_SIZE];
         long chunkSize = fread(buff, 1, buffSize, fd);
@@ -309,8 +306,7 @@ HTTP_STATUS http_route_get(Client* client)
         client->progress->size += bytesSent;
     }
     LOG_DEBUG("Progress: get %ld/%ld\n", client->progress->size, content_length);
-    if(client->request->is_range)
-    {
+    if (client->request->is_range) {
         LOG_INFO("#%d Range %zu-%zu/%zu\n", client->socket, client->request->range_start, range_end, fileSize);
         LOG_INFO("Progress: get %ld/%ld %ld\n", client->progress->size, content_length, range_end - client->request->range_start);
     }

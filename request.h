@@ -1,6 +1,7 @@
 #pragma once
-#include <stdbool.h>
 #include "config.h"
+#include <stdlib.h>
+#include <stdbool.h>
 
 typedef enum RequestMethod {
     RM_NONE,
@@ -47,4 +48,4 @@ void getHeaders(char* data, char* result);
 void getHeaderValue(char* pheaders, char* name, char* result);
 void dumpRequest(Request* request);
 void resetRequest(Request* request);
-Request* parseRequest(int received, char* data, Request * request);
+Request* parseRequest(int received, char* data, Request* request);

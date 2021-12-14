@@ -1,6 +1,6 @@
 #pragma once
-#include <stdbool.h>
 #include "log.h"
+#include <stdbool.h>
 
 bool arg_isset(int argc, char* argv[], char* name);
 
