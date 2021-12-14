@@ -30,9 +30,7 @@ void httpc_free(void * ptr) {
     HTTPC_Malloc * result;
     HTTPC_Malloc * temp;
     ///temp->ptr = ptr;
-    
     free(ptr);
-    //httpc_allocated -= size;
     return;
     
     DL_SEARCH(httpc_malloced, result, &temp, ptrcmp);

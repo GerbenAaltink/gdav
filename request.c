@@ -67,8 +67,9 @@ void dumpRequest(Request* request)
 
 void resetRequest(Request* request)
 {
-    free(request);
-    request = (Request*)malloc(sizeof(Request));
+    bzero(request->headers,sizeof(request->headers));
+    //free(request);
+    //request = (Request*)malloc(sizeof(Request));
     return;
 }
 
@@ -79,10 +80,8 @@ Request* parseRequest(char* data)
 
     int received = strlen(data);
 
-    printf("-1\n");
     getHeaders(data, request->headers);
     
-    printf("0\n");
     char tokenizeData[strlen(data) + 1];
     strcpy(tokenizeData, data);
 
@@ -90,18 +89,14 @@ Request* parseRequest(char* data)
     strcpy(request->path, url_decode(strtok(NULL, token)));
     strcpy(request->relativePath, request->path + 1);
     strcpy(request->version, strtok(NULL, "\r\n"));
-    printf("1\n");
     char* body = safe_strstr(data, "\r\n\r\n");
     
-    printf("2\n");
     if (str_index(body, "\r\n\r\n") != -1) {
         strcpy(request->body, body + 4);
         
     }
 
-    printf("3\n");
-    request->bytesLeft = request->body != 0 ? strlen(request->body) : 0;
-
+    //BUGG!: request->bytesLeft = strlen(request->body); 
     request->isGet = strncmp(request->method, "GET", 3) == 0;
     request->isPropfind = strncmp(request->method, "PROPFIND", 8) == 0;
     request->isOptions = strncmp(request->method, "OPTIONS", 7) == 0;
@@ -110,8 +105,6 @@ Request* parseRequest(char* data)
     request->isHead = strncmp(request->method, "HEAD", 4) == 0;
     request->isMkcol = strncmp(request->method, "MKCOL", 5) == 0;
    
-    
-    printf("4\n");
     getHeaderValue(request->headers, "Range", request->range);
     request->is_range = strlen(request->range) > 0;
     if(request->is_range){

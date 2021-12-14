@@ -131,7 +131,7 @@ HTTP_STATUS http_put(struct client_info* client)
         fclose(f);
 
     }
-   
+    
     if (client->progress->size != client->request->contentLength && client->request->bytesLeft) {
         if (exists && client->progress->size == 0) {
             unlink(info->relativePath);

@@ -133,8 +133,12 @@ Client* get_client(SOCKET s)
     struct client_info* n = (struct client_info*)calloc(1, sizeof(struct client_info));
     n->progress = (Progress*)calloc(1, sizeof(Progress));
     n->progress->busy = 0;
-    n->buffer = (char*)calloc(sizeof(char), SOCKET_READ_BUFFER_SIZE + 4096 + 1);
+    n->progress->size = 0;
+    n->received = 0;
+    n->buffer = (char*)calloc(sizeof(char), REQUEST_MAX_LENGTH + 1);
     n->buffer[0] = 0;
+    n->writeCount = 0;
+    n->readCount = 0;
     n->request = (Request *)calloc(1, sizeof(Request));
 
     if (!n) {
@@ -184,11 +188,10 @@ void drop_client(struct client_info* client)
         if (*p == client) {
             LOG_DEBUG("Closed: %s Count: %d\n", client->name, connection_count);
             if (LOG_STATS)
-                LOG_INFO("%s\n", strstat(stats));
-            
-#free(client->request);
-#           free(client->progress);
-#           free(client->buffer);
+                LOG_INFO("%s\n", strstat(stats));      
+            free(client->request);
+            free(client->progress);
+            free(client->buffer);
             *p = client->next;
             free(client);
             stats.connectionCount -= 1;

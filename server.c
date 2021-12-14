@@ -6,7 +6,7 @@
 
 void handle_write(Client* client)
 {
-    int close = 0;
+    int close = 2;
 
     if (client->request->isGet) {
         close = http_route_get(client);
@@ -31,15 +31,13 @@ void handle_write(Client* client)
     }
     LOG_DEBUG("Done %d %s %s %s\n", close, client->request->method,
         client->request->path, client->name);
-
-
+            
     client->request->bytesLeft = 0;
     if (close == 0) {
         client->progress->busy = true;
     } else if (close == 1 && client->request->keepAlive) {
         resetClient(client);
         client->received = 0;
-        // free(client->request)
     } else if (close) {
         drop_client(client);
     }
@@ -47,13 +45,12 @@ void handle_write(Client* client)
 
 int handle_read(Client* client)
 {
+    
     int buffSize = SOCKET_READ_BUFFER_SIZE;
     if (client->progress->busy == true) {
         if(client->request->contentLength - client->progress->size < SOCKET_READ_BUFFER_SIZE)
             buffSize = client->request->contentLength - client->progress->size;
     }
-    printf("BSIZE: %d\n",buffSize);
-
     char data[buffSize + 1];
     
     //bzero(data, buffSize + 1);
@@ -66,10 +63,8 @@ int handle_read(Client* client)
     }
     data[recvLength] = 0;
     
-    client->received += recvLength;
+    client->received += recvLength; 
     if (client->progress->busy == 0) {
-        
-
         strcat(client->buffer, data);
         if (str_index(client->buffer, "\r\n\r\n") != -1) {
             client->request = parseRequest(client->buffer);
@@ -78,15 +73,16 @@ int handle_read(Client* client)
                 client->name);
             client->progress->busy = 1;
             bzero(client->buffer, sizeof(client->buffer));
-            client->bodyReceived = client->request->bytesLeft;
+            
+            client->request->bytesLeft = recvLength - strlen(client->request->headers);           
             if (client->request->isPropfind) {
                 drain(client);
             }
+
         }
     } else {
         strcpy(client->request->body, data);
         client->request->bytesLeft = recvLength;
-        client->bodyReceived += client->request->bytesLeft;
     }
 
     return recvLength;
@@ -120,13 +116,14 @@ int serve(const char* host, const char* port)
                     client = next;
                     continue;
                 }
-                //if(client->progress->busy)
-            //if (client->progress->busy == true && FD_ISSET(client->socket, &selected->writers)) {
-                    handle_write(client);
-            //}
+            }
+            
+            if (client->progress->busy == true && FD_ISSET(client->socket, &selected->writers)) {
+                handle_write(client);
+            }
 
                
-            }
+            
 
             
             client = next;

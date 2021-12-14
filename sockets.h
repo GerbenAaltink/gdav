@@ -56,6 +56,8 @@ struct client_info {
     long bytesSent;
     long bytesReceived;
     size_t bodyReceived;
+    int readCount;
+    int writeCount;
 };
 
 typedef struct client_info Client;
