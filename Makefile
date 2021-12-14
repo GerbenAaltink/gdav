@@ -1,5 +1,5 @@
 CC = tcc 
-CFLAGS =  *.c -o httpc
+CFLAGS =  *.c static/static.c -o httpc
 BIN =  ./httpc
 PORT = 8888
 BENCHMARK = ab -c 10 -n 2000
@@ -14,23 +14,26 @@ build:
 	$(CC) $(CFLAGS) 
 
 static:
-	cc *.c -static -o httpc-static
+	cd static/
+	./build.py
+	cd ..
+	#cc *.c -static -o httpc-static
 
-run:
+run: static
 	$(CC) $(CFLAGS) 
 	./httpc 8888 --log-recv
 
 deploy:
 	scp httpc root@5.79.65.195:/root/httpc
 
-debug:
+debug: static
 	DEBUG=1 $(CC) $(CFLAGS) -bench -d -Wall -bt 10 -g -v -vv -MD -D"DEBUG=1"
 	$(BIN) $(PORT) --debug
 
 valgrind: debug
 	valgrind ./httpc
 
-info:
+info: static
 	$(CC) $(CFLAGS) 
 	$(BIN) $(PORT) --info
 

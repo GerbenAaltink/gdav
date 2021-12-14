@@ -11,6 +11,7 @@
 #include "mimetype.h"
 #include "path.h"
 #include <sys/stat.h>
+#include "static/static.h"
 
 HTTP_STATUS http_status_response(Client* client, int status, char* message,
     char* body)
@@ -237,10 +238,25 @@ int http_propfind(struct client_info* client)
     return status;
 }
 
+HTTP_STATUS http_response_static(Client * client) {
+    char * content = gdav_static_blob(client->request->path);
+    char data[strlen(content) + 1024];
+    sprintf(data, "HTTP/1.1 200 OK\r\n"
+            "Content-Length: %d\r\n" 
+            "Content-Type: %s\r\n"
+            "\r\n%s", strlen(content),get_mimetype(client->request->path), content);
+    int result = sendAll(client, data) < 1 ? 2 : 1;
+    free(content);
+    return result;
+}
+
 HTTP_STATUS http_route_get(Client* client)
 {
     if (streq(client->request->path, "/ping"))
         return http_status_response(client, 200, "PONG", "PONG");
+    if (gdav_static_match(client->request->path) != -1){
+        return http_response_static(client);
+    }
 
     Path* info = path_info(client->request->relativePath);
     bool exists = info->exists;
