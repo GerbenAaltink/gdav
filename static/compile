@@ -48,9 +48,5 @@ with open('urls.h', 'w+') as fio:
     fio.write(f"const int gdav_static_urls_count = {url_count};")
     fio.write("\n")
 
-os.system("tcc main.c -o gdav_static")
-exit(0)
-lines = []
-for url, target in urls.items():
-    lines.append(f"FRONTEND_URL_{target.upper()} = \"{url}\"")
+os.system("tcc main.c -o static")
 

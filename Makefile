@@ -10,14 +10,15 @@ shared:
 testd:
 	gcc tests/*.c -o tests.o 
 	./tests.o
-build:
-	$(CC) $(CFLAGS) 
 
 static:
 	cd static/
 	make
 	cd ..
 	#cc *.c -static -o httpc-static
+
+build: static
+	$(CC) $(CFLAGS) 
 
 run: static
 	$(CC) $(CFLAGS) 
