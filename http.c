@@ -243,31 +243,29 @@ HTTP_STATUS http_response_static(Client* client)
     char* content = gdav_static_blob(client->request->path);
     int length = strlen(content);
     char headers[1024];
-    if(client->progress->size == 0)
-    {
+    if (client->progress->size == 0) {
         sprintf(headers, "HTTP/1.1 200 OK\r\n"
-                  "Content-Length: %zu\r\n"
-                  "Content-Type: %s\r\n"
-                  "\r\n",
-        strlen(content), get_mimetype(client->request->path));
-        if(sendAll(client, headers) < 1){
+                         "Content-Length: %zu\r\n"
+                         "Content-Type: %s\r\n"
+                         "\r\n",
+            strlen(content), get_mimetype(client->request->path));
+        if (sendAll(client, headers) < 1) {
             return 2;
         }
     }
-    char * data = content + client->progress->size;
+    char* data = content + client->progress->size;
 
     int bytes_left = strlen(data);
     int buffer_size = SOCKET_WRITE_BUFFER_SIZE > bytes_left ? bytes_left : SOCKET_WRITE_BUFFER_SIZE;
     int sent = sendAllN(client, data, buffer_size);
-    
+
     //int result = sendAll(client, data) < 1 ? 2 : 1;
     free(content);
-    if(sent < 1){
+    if (sent < 1) {
         return 2;
     }
     client->progress->size += sent;
-    if(client->progress->size == length)
-    {
+    if (client->progress->size == length) {
         return 1;
     }
     return 0;

@@ -57,7 +57,7 @@ char* xml_response_node(char* path)
     char* href = (char*)calloc(1024, sizeof(char));
     char url[1024];
     sprintf(url, "/%s", info->path);
-    write_xml_node(href, "href", (char *)url_encode(url));
+    write_xml_node(href, "href", (char*)url_encode(url));
 
     char* response = (char*)calloc(4069, sizeof(char));
 

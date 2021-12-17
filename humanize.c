@@ -5,7 +5,7 @@
 
 char* humanize_bytes(size_t bytes)
 {
-    char suffix[2];
+    char suffix[3];
     double value;
 
     double gb = 1024 * 1024 * 1024;
