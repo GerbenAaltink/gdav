@@ -28,9 +28,9 @@ size_t html_index(char* document, char* path)
     while ((d = readdir(dir)) != NULL) {
         if (!strcmp(d->d_name, ".") || !strcmp(d->d_name, ".."))
             continue;
-        char full_path[2048];
+        char full_path[4096];
         full_path[0] = 0;
-        sprintf(full_path, "%s%s", normalized_path, d->d_name);
+        csprintf(full_path, "%s%s", normalized_path, d->d_name);
         csprintf(document, "<a href=\"/%s\">%s</a><br />\n", url_encode(full_path), d->d_name);
     }
     closedir(dir);
