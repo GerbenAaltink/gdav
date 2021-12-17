@@ -18,7 +18,7 @@ for f in pathlib.Path(".").glob("*"):
     url = root_url + f.name
     os.system(f"xxd -i {f.name} {header_path}")
 #    urls[root_url + f.name] = f.name.replace("_", ".")
-    define_name = "GDAV_STATIC_URL_" + underscore_name.upper()  
+    define_name = "const char GDAV_STATIC_URL_" + underscore_name.upper() + "[]"  
     files[underscore_name] = url
     with open(header_path, 'a') as fio:
         fio.write("\n")

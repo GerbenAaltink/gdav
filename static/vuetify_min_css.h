@@ -44601,4 +44601,4 @@ unsigned char vuetify_min_css[] = {
 };
 unsigned int vuetify_min_css_len = 535179;
 
-GDAV_STATIC_URL_VUETIFY_MIN_CSS = "/$gdav/static/vuetify.min.css";
+const char GDAV_STATIC_URL_VUETIFY_MIN_CSS[] = "/$gdav/static/vuetify.min.css";
