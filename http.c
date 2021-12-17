@@ -37,7 +37,7 @@ HTTP_STATUS http_html_index(Client* client)
 {
     char document[1024 * 1024];
     size_t content_length = html_index(document, client->request->relativePath);
-    char response[1024 * 1024];
+    char response[sizeof(document) + 1024];
     sprintf(response, "HTTP/1.1 200 OK\r\n"
                       "Content-Length: %zu\r\n"
                       "Content-Type: text/html\r\n\r\n%s",
