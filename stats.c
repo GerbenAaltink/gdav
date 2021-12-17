@@ -15,8 +15,8 @@ const char* strstat(Stats st)
     sprintf(str,
         "sent: %s\t"
         "recv: %s\t"
-        "c: %d\t"
-        "tc: %d",
+        "c: %ld\t"
+        "tc: %ld",
         human_bytes_sent, human_bytes_received, st.connectionCount,
         st.connectionCountMax);
     return str;

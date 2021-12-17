@@ -157,7 +157,7 @@ const char* get_client_address(struct client_info* ci)
     return address_buffer;
 }
 
-Client* accept_client(socket)
+Client* accept_client(SOCKET socket)
 {
     Client* client = get_client(-1);
 

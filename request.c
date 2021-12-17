@@ -61,7 +61,7 @@ void dumpRequest(Request* request)
     printf("isPut: %d\n", request->isPut);
     printf("User-Agent: %s\n", request->userAgent);
     printf("Depth: %s\n", request->depth);
-    printf("Content-Length: %d\n", request->contentLength);
+    printf("Content-Length: %zu\n", request->contentLength);
     printf("Body: %s\n", request->body);
 }
 

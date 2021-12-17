@@ -81,7 +81,7 @@ void resetClient(Client* client);
 
 Client* get_client(SOCKET s);
 const char* get_client_address(struct client_info* ci);
-Client* accept_client(socket);
+Client* accept_client(SOCKET socket);
 void drop_client(struct client_info* client);
 fd_set wait_on_writables(SOCKET server);
 char* recv_until(int fd, char* needle);
