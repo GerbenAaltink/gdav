@@ -17,7 +17,7 @@ HTTP_STATUS http_status_response(Client* client, int status, char* message,
     char* body)
 {
     char response[100 + strlen(body)];
-    sprintf(response, "HTTP/1.1 %d %s\r\nContent-Length: %d\r\n\r\n", status,
+    sprintf(response, "HTTP/1.1 %d %s\r\nContent-Length: %zu\r\n\r\n", status,
         message, strlen(body));
     if (strlen(body))
         strcat(response, body);
@@ -82,7 +82,7 @@ HTTP_STATUS http_head(Client* client)
     }
     char response[200];
     sprintf(response,
-        "HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type: %s\r\n\r\n",
+        "HTTP/1.1 200 OK\r\nContent-Length: %zu\r\nContent-Type: %s\r\n\r\n",
         size, get_mimetype(client->request->relativePath));
     return sendAll(client, response) > 0 ? HTTP_OK : HTTP_ERROR;
 }
@@ -224,7 +224,7 @@ int http_propfind(struct client_info* client)
 
     char* document = httpc_malloc(sizeof(char) * (1024 + strlen(content)));
     sprintf(document,
-        "HTTP/1.1 207 OK\r\nContent-Length: %d\r\n"
+        "HTTP/1.1 207 OK\r\nContent-Length: %zu\r\n"
         "Content-Type: text/xml; charset=\"utf-8\"\r\n"
         "\r\n%s",
         strlen(content), content);
@@ -246,7 +246,7 @@ HTTP_STATUS http_response_static(Client* client)
     if(client->progress->size == 0)
     {
         sprintf(headers, "HTTP/1.1 200 OK\r\n"
-                  "Content-Length: %d\r\n"
+                  "Content-Length: %zu\r\n"
                   "Content-Type: %s\r\n"
                   "\r\n",
         strlen(content), get_mimetype(client->request->path));
