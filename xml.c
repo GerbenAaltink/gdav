@@ -10,10 +10,7 @@
 
 int write_xml_node(char* dest, char* name, char* value)
 {
-    //char startTag[1000];
     csprintf(dest, "<D:%s>%s</D:%s>", name, value, name);
-    //sprintf(startTag, "<D:%s>%s</D:%s>", name, value, name);
-    //strcat(dest, startTag);
     return strlen(dest);
 }
 
@@ -29,6 +26,7 @@ char* xml_response_node(char* path)
     Path* info = path_info(path);
 
     char* prop = (char*)calloc(9000, sizeof(char));
+
     write_xml_node(prop, "displayname", info->name);
 
     write_xml_node_int(prop, "iscollection", info->is_dir ? 1 : 0);
@@ -59,7 +57,7 @@ char* xml_response_node(char* path)
     sprintf(url, "/%s", info->path);
     write_xml_node(href, "href", (char*)url_encode(url));
 
-    char* response = (char*)calloc(4069, sizeof(char));
+    char* response = (char*)calloc(10240, sizeof(char));
 
     write_xml_node(response, "response", strcat(href, propstat));
     free(prop);

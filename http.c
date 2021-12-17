@@ -191,7 +191,7 @@ int http_propfind(struct client_info* client)
 
     // TODO: move int conversion to request
     int depth = strncmp(client->request->depth, "0", 1) == 0 ? 0 : 1;
-    char* xml_node = malloc(4096);
+    char* xml_node = malloc(8096);
     if (info->is_dir == 0 || depth == 0) {
         xml_node = xml_response_node(client->request->relativePath);
         strcat(content, xml_node);
