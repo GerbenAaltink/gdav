@@ -1178,13 +1178,14 @@ httpc: \
  static/static.h \
  static/urls.h \
  static/index_html.h \
+ static/vuetify_js.h \
  static/materialdesignicons_css_map.h \
+ static/vuetify_js_map.h \
+ static/webdav_js.h \
  static/materialdesignicons_min_css.h \
  static/roboto_100_300_400_500_700_900_css.h \
- static/vue_js.h \
- static/vuetify_js.h \
- static/vuetify_js_map.h \
  static/vuetify_min_css.h \
+ static/vue_js.h \
  /usr/local/lib/tcc/include/stdbool.h \
  /usr/include/stdlib.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \

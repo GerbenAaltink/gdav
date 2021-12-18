@@ -1,4 +1,4 @@
-CC = cc 
+CC = tcc 
 CFLAGS =  *.c static/static.c -o httpc
 BIN =  ./httpc
 PORT = 8888
