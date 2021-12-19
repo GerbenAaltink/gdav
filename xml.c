@@ -23,6 +23,11 @@ int write_xml_node_int(char* dest, char* name, int value)
     sprintf(chars, "%d", value);
     return write_xml_node(dest, name, chars);
 }
+int write_xml_node_size(char * dest, char * name, size_t value){
+    char chars[15];
+    sprintf(chars, "%zu", value);
+    return write_xml_node(dest, name, chars);
+}
 
 
 const char * xml_response_node(char* path)
@@ -37,7 +42,7 @@ const char * xml_response_node(char* path)
     if (info->is_dir) {
         write_xml_node(prop, "getcontentlength", "-DIR-");
     } else {
-        write_xml_node_int(prop, "getcontentlength", info->size);
+        write_xml_node_size(prop, "getcontentlength", info->size);
     }
     write_xml_node_int(prop, "isroot", strcmp(path, "/") == 0 ? 1 : 0);
     write_xml_node_int(prop, "ishidden", strncmp(info->name, ".", 1) ? 1 : 0);
