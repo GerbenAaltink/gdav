@@ -214,12 +214,13 @@ int http_propfind(struct client_info* client)
     char xml_footer[] = "</D:multistatus>";
     strcat(content, xml_footer);
 
-    char document[sizeof(content)+1024];
+    char document[strlen(content)+1024];
     sprintf(document,
         "HTTP/1.1 207 OK\r\nContent-Length: %zu\r\n"
         "Content-Type: text/xml; charset=\"utf-8\"\r\n"
         "\r\n%s",
         strlen(content), content);
+
 
     int status = sendAll(client, document) < 1 ? 2 : 1;
 

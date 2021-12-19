@@ -65,11 +65,11 @@ int receive(Client* client, char* buff, size_t buffSize)
 
 int sendAll(Client* client, char* data)
 {
-    int toSend = strlen(data);
-    int sent = 0;
+    size_t toSend = strlen(data);
+    size_t sent = 0;
 
     while (sent != toSend) {
-        int chunkSize = send(client->socket, data + sent, strlen(data + sent), 0);
+        size_t chunkSize = send(client->socket, data + sent, strlen(data + sent), 0);
 
         if (chunkSize < 1) {
             LOG_ERROR("sendAll error: %s\n", strerror(errno));
@@ -77,7 +77,7 @@ int sendAll(Client* client, char* data)
         }
 
         if (LOG_SEND)
-            LOG_DEBUG("send (%d/%d): '%s'\n", sent, toSend, data + sent);
+            LOG_DEBUG("send (%zu/%zu): '%s'\n", sent, toSend, data + sent);
 
         sent += chunkSize;
         client->bytesSent += chunkSize;
@@ -85,12 +85,12 @@ int sendAll(Client* client, char* data)
     stats.bytesSent += sent;
     return sent;
 }
-int sendAllN(Client* client, char* data, int toSend)
+int sendAllN(Client* client, char* data, size_t toSend)
 {
-    int sent = 0;
+    size_t sent = 0;
 
     while (sent < toSend) {
-        int chunkSize = send(client->socket, data + sent, toSend - sent, 0);
+        size_t chunkSize = send(client->socket, data + sent, toSend - sent, 0);
 
         if (chunkSize < 1) {
             LOG_ERROR("sendAll error: %s\n", strerror(errno));
@@ -98,7 +98,7 @@ int sendAllN(Client* client, char* data, int toSend)
         }
 
         if (LOG_SEND)
-            LOG_DEBUG("send (%d/%d): '%s'\n", sent, toSend, data + sent);
+            LOG_DEBUG("send (%zu/%zu): '%s'\n", sent, toSend, data + sent);
 
         sent += chunkSize;
         client->bytesSent += chunkSize;

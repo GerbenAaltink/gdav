@@ -75,7 +75,7 @@ Client* clients;
 int receive(Client* client, char* buff, size_t buffSize);
 
 int sendAll(Client* client, char* data);
-int sendAllN(Client* client, char* data, int toSend);
+int sendAllN(Client* client, char* data, size_t toSend);
 
 void resetProgress(Progress* progress);
 
