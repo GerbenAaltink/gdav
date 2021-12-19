@@ -97,6 +97,9 @@ int sendAllN(Client* client, char* data, int toSend)
             return chunkSize;
         }
 
+        if (LOG_SEND)
+            LOG_DEBUG("send (%d/%d): '%s'\n", sent, toSend, data + sent);
+
         sent += chunkSize;
         client->bytesSent += chunkSize;
     }
@@ -175,6 +178,7 @@ Client* accept_client(SOCKET socket)
     stats.connectionCount += 1;
     if (stats.connectionCount > stats.connectionCountMax)
         stats.connectionCountMax = stats.connectionCount;
+    client->reading = true;
     return client;
 }
 
@@ -214,6 +218,7 @@ struct select_result* wait_on_clients(SOCKET server)
     struct client_info* ci = clients;
     while (ci) {
         FD_SET(ci->socket, &result->readers);
+        //if(ci->writing)
         FD_SET(ci->socket, &result->writers);
         FD_SET(ci->socket, &result->errors);
         if (ci->socket > max_socket)

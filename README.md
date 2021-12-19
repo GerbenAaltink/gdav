@@ -35,3 +35,4 @@ By smart chunking requests do not block eachother.
  - Create gist for url encoder/decoder 
  - PUT on non-existing parent path crashes
  - Clean up request.c (Range header bug, strcpy for body should be memcpy, received is unused, tokenizedData can be pointer(saves a copy), remove commented code)
+ - PUT should return 200 instead of 201

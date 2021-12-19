@@ -33,6 +33,7 @@ void handle_write(Client* client)
         client->request->path, client->name);
 
     client->request->bytesLeft = 0;
+    client->reading = true;
     if (close == 0) {
         client->progress->busy = true;
     } else if (close == 1 && client->request->keepAlive) {
@@ -53,6 +54,8 @@ int handle_read(Client* client)
     }
     char data[buffSize + 1];
 
+    bzero(data, buffSize);
+
     //bzero(data, buffSize + 1);
     LOG_DEBUG("Reading: %s\n", client->name);
     int recvLength = receive(
@@ -61,26 +64,31 @@ int handle_read(Client* client)
     if (recvLength < 1) {
         return recvLength;
     }
-    //data[recvLength] = 0;
-
     client->received += recvLength;
+    //data[recvLength] = 0;
+    
     if (client->progress->busy == 0) {
         strcat(client->buffer, data);
         if (str_index(client->buffer, "\r\n\r\n") != -1) {
-            parseRequest(recvLength, client->buffer, client->request);
+            parseRequest(client->received, client->buffer, client->request);
             client->hasRequest = true;
             LOG_INFO("%s %s %s\n", client->request->method, client->request->path,
                 client->name);
             client->progress->busy = 1;
             bzero(client->buffer, sizeof(client->buffer));
-            client->request->bytesLeft = recvLength - strlen(client->request->headers);
+            client->received = 0;
+            //client->request->bytesLeft = recvLength - strlen(client->request->headers);
             if (client->request->isPropfind) {
                 drain(client);
             }
+            client->writing = true;
+            client->reading = false;
         }
     } else {
         memcpy(client->request->body, data, recvLength);
         client->request->bytesLeft = recvLength;
+        client->writing = true;
+        client->reading = false;
     }
 
     return recvLength;
@@ -118,6 +126,7 @@ int serve(const char* host, const char* port)
 
             if (client->progress->busy == true && FD_ISSET(client->socket, &selected->writers)) {
                 handle_write(client);
+                
             }
 
             client = next;

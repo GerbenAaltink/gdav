@@ -75,6 +75,8 @@ void resetRequest(Request* request)
 
 Request* parseRequest(int received, char* data, Request* request)
 {
+
+    bzero(request, sizeof(Request));
     const char* token = " ";
 
     getHeaders(data, request->headers);
@@ -90,6 +92,7 @@ Request* parseRequest(int received, char* data, Request* request)
 
     if (str_index(body, "\r\n\r\n") != -1) {
         memcpy(request->body, body + 4, received - strlen(request->headers));
+        request->bytesLeft = received - strlen(request->headers);
     }
 
     //BUGG!: request->bytesLeft = strlen(request->body);

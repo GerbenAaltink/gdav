@@ -8,6 +8,8 @@
 #include "url.h"
 #include "xml.h"
 
+
+//http://www.chiark.greenend.org.uk/doc/libg2c0/cpp.html
 int write_xml_node(char* dest, char* name, char* value)
 {
     csprintf(dest, "<D:%s>%s</D:%s>", name, value, name);
@@ -16,19 +18,21 @@ int write_xml_node(char* dest, char* name, char* value)
 
 int write_xml_node_int(char* dest, char* name, int value)
 {
+    
     char chars[10];
     sprintf(chars, "%d", value);
     return write_xml_node(dest, name, chars);
 }
 
-char* xml_response_node(char* path)
+
+const char * xml_response_node(char* path)
 {
     Path* info = path_info(path);
 
-    char* prop = (char*)calloc(9000, sizeof(char));
+    char prop[10240];
+    bzero(prop, sizeof(prop));
 
     write_xml_node(prop, "displayname", info->name);
-
     write_xml_node_int(prop, "iscollection", info->is_dir ? 1 : 0);
     if (info->is_dir) {
         write_xml_node(prop, "getcontentlength", "-DIR-");
@@ -43,28 +47,35 @@ char* xml_response_node(char* path)
         write_xml_node(prop, "resourcetype", "<D:collection />");
     }
 
-    char* status = (char*)calloc(100, sizeof(char));
+    char status[10240];
+
+    bzero(status, sizeof(status));
     write_xml_node(status, "status", "HTTP/1.1 200 OK");
 
-    char* props = (char*)calloc(4096, sizeof(char));
+    char props[10240];
+
+    bzero(props, sizeof(props));
     write_xml_node(props, "prop", prop);
 
-    char* propstat = (char*)calloc(4096, sizeof(char));
+    char propstat[10240];
+
+    bzero(propstat, sizeof(propstat));
     write_xml_node(propstat, "propstat", strcat(props, status));
 
-    char* href = (char*)calloc(1024, sizeof(char));
-    char url[1024];
+    char href[10240];
+
+    bzero(href, sizeof(href));
+    char url[10240];
+
+    bzero(url, sizeof(url));
     sprintf(url, "/%s", info->path);
     write_xml_node(href, "href", (char*)url_encode(url));
 
-    char* response = (char*)calloc(10240, sizeof(char));
+    static char response[10240];
+
+    bzero(response, sizeof(response));
 
     write_xml_node(response, "response", strcat(href, propstat));
-    free(prop);
-    free(props);
-    free(status);
-    free(propstat);
-    free(href);
-    httpc_free(info);
+    
     return response;
 }

@@ -119,9 +119,12 @@ int drain(Client* client)
 
 HTTP_STATUS http_put(struct client_info* client)
 {
-
+    LOG_DEBUG("#%d PUT %zu/%zu/%zu/%zu/%zu\n", client->socket, client->bodyReceived, client->progress->size, client->request->contentLength, client->received, strlen(client->request->headers));
+    
     if (client->request->bytesLeft == 0 && client->request->contentLength != 0) {
         // No data received
+        client->writing = false;
+        client->reading = true;
         return 0;
     }
 
@@ -137,8 +140,8 @@ HTTP_STATUS http_put(struct client_info* client)
         if (exists && client->progress->size == 0) {
             unlink(info->relativePath);
         }
-        FILE* fd = fopen(client->request->relativePath, "a+");
-
+        FILE* fd = fopen(client->request->relativePath, "ab+");
+        fseek(fd, 0L, SEEK_END);
         fwrite(client->request->body, sizeof(char), client->request->bytesLeft, fd);
         client->progress->size += client->request->bytesLeft;
         client->request->bytesLeft = 0;
@@ -146,7 +149,6 @@ HTTP_STATUS http_put(struct client_info* client)
         fclose(fd);
     }
 
-    LOG_DEBUG("#%d PUT %zu/%zu/%zu/%zu/%zu\n", client->socket, client->bodyReceived, client->progress->size, client->request->contentLength, client->received, strlen(client->request->headers));
     httpc_free(info);
     if (client->progress->size == client->request->contentLength) {
 
@@ -184,45 +186,35 @@ int http_propfind(struct client_info* client)
         httpc_free(info);
         return http_response_404(client);
     }
-    char* content = httpc_malloc(1024 * 1024);
+    char content[1024*1024];
     char xml_header[] = "<?xml version=\"1.0\" encoding=\"utf-8\" "
                         "?><D:multistatus xmlns:D=\"DAV:\">";
     strcpy(content, xml_header);
 
     // TODO: move int conversion to request
     int depth = strncmp(client->request->depth, "0", 1) == 0 ? 0 : 1;
-    char* xml_node = malloc(8096);
     if (info->is_dir == 0 || depth == 0) {
-        xml_node = xml_response_node(client->request->relativePath);
-        strcat(content, xml_node);
-        xml_node[0] = 0;
+        strcat(content, xml_response_node(client->request->relativePath));
     } else {
-        xml_node = xml_response_node(client->request->relativePath);
-        strcat(content, xml_node);
-        xml_node[0] = 0;
+        strcat(content, xml_response_node(client->request->relativePath));
         DIR* d;
         struct dirent* dir;
         d = opendir(client->request->relativePath);
         while ((dir = readdir(d)) != NULL) {
             if (!valid_path(dir->d_name))
                 continue;
-
             char* fullPath = join_path(client->request->relativePath, dir->d_name);
-            xml_node = xml_response_node(fullPath);
+            strcat(content, xml_response_node(fullPath));
             httpc_free(fullPath);
-
-            strcat(content, xml_node);
-            xml_node[0] = 0;
         }
         closedir(d);
         free(dir);
     }
-    free(xml_node);
 
     char xml_footer[] = "</D:multistatus>";
     strcat(content, xml_footer);
 
-    char* document = httpc_malloc(sizeof(char) * (1024 + strlen(content)));
+    char document[sizeof(content)+1024];
     sprintf(document,
         "HTTP/1.1 207 OK\r\nContent-Length: %zu\r\n"
         "Content-Type: text/xml; charset=\"utf-8\"\r\n"
@@ -231,8 +223,6 @@ int http_propfind(struct client_info* client)
 
     int status = sendAll(client, document) < 1 ? 2 : 1;
 
-    httpc_free(document);
-    httpc_free(content);
     httpc_free(info);
 
     return status;
