@@ -3,6 +3,11 @@
 #include "args.h"
 #include "functions.h"
 
+void args_clean(int argc, char *argv[]){
+    for(int i = 0; i < argc; i++)
+        strcpy(argv[i], strtrim(argv[i],'""'));
+}
+
 bool arg_isset(int argc, char* argv[], char* name)
 {
     for (int i = 0; i < argc; i++) {

@@ -16,12 +16,18 @@ typedef enum RequestMethod {
 
 typedef struct Request {
     char method[10];
-    char path[4097];
-    char relativePath[4097];
+    char path[4096];
+    char relativePath[4096];
+    char realPath[4096];
+    char root[4096];
+    char username[256];
+    char password[256];
+    bool authorized;
     char version[10];
     char headers[4096];
     char depth[1024];
     char userAgent[1024];
+    char authorization[1024];
     bool isGet;
     bool isPropfind;
     bool isOptions;

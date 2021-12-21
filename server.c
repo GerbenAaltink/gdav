@@ -3,30 +3,30 @@
 #include "http.h"
 #include "log.h"
 #include "server.h"
+#include "user.h"
 
 void handle_write(Client* client)
 {
     int close = 2;
+    
+    bool authorization_required = user_count > 0;
 
-    if (client->request->isGet) {
+    if(authorization_required && !client->request->authorized)
+    {
+        close = http_response_401(client);
+    }else if(client->request->isGet) {
         close = http_route_get(client);
-    }
-    if (client->request->isPropfind) {
+    }else if(client->request->isPropfind) {
         close = http_propfind(client);
-    }
-    if (client->request->isOptions) {
+    }else if (client->request->isOptions) {
         close = http_options(client);
-    }
-    if (client->request->isDelete) {
+    }else if (client->request->isDelete) {
         close = http_delete(client);
-    }
-    if (client->request->isHead) {
+    }else if (client->request->isHead) {
         close = http_head(client);
-    }
-    if (client->request->isPut) {
+    }else if (client->request->isPut) {
         close = http_put(client);
-    }
-    if (client->request->isMkcol) {
+    }else if (client->request->isMkcol) {
         close = http_mkcol(client);
     }
     LOG_DEBUG("Done %d %s %s %s\n", close, client->request->method,

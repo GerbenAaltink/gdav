@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 
 typedef struct HTTPC_Malloc {
     void* ptr;

@@ -2,7 +2,7 @@ CC = tcc
 CFLAGS =  *.c static/static.c -o httpc
 BIN =  ./httpc
 PORT = 8888
-BENCHMARK = ab -c 10 -n 2000
+BENCHMARK = ab -c 10 -n 2000 -P x:x
 
 shared:
 	cc -fPIC -shared -o httpc.so *.c
@@ -50,11 +50,14 @@ format:
 	clang-format -i -style=WebKit *.c *.h
 			
 bench_propfind:
+	@echo $BENCHMARK
 	$(BENCHMARK) -m PROPFIND http://localhost:8888/public/
 
 bench_get:
+	@echo $BENCHMARK
 	$(BENCHMARK) -m GET http://localhost:8888/public/index.html
 
 bench_ping:
-	$(BENCHMARK) -m GET http://localhost:8888/ping/
+	@echo $BENCHMARK
+	$(BENCHMARK) -m GET http://localhost:8888/ping
 

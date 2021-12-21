@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "base64.h"
 
 #include "request.h"
 #include "url.h"
+#include "user.h"
 
 char* safe_strstr(char* pdata, char* needle)
 {
@@ -73,13 +75,51 @@ void resetRequest(Request* request)
     return;
 }
 
+void parseAuthorization(Request * request){
+    
+    if(!strlen(request->authorization))
+        return;
+
+    char * auth_header = malloc(strlen(request->authorization) + 1);
+    strcpy(auth_header, request->authorization);
+    auth_header = strstr(auth_header," ") + 1;
+    
+    size_t olen;
+    size_t ilen = strlen(auth_header);
+    
+    char * credentials = base64_decode(auth_header, ilen, &olen);
+    credentials[olen] = 0;
+
+    char seperator[] = ":";
+    if(strlen(credentials))
+        strcpy(request->username, strtok(credentials, seperator));
+    if(strlen(credentials))
+        strcpy(request->password, strtok(NULL, seperator));
+    free(credentials);
+    User * user = user_get(request->username);
+    if(user && !strcmp(user->password, request->password)){
+        request->authorized = true;
+        strcpy(request->root, user->root);
+    }else{
+        request->authorized = false;
+        strcpy(request->root, ".");
+    }
+
+}
+
 Request* parseRequest(int received, char* data, Request* request)
 {
 
     bzero(request, sizeof(Request));
     const char* token = " ";
 
+    strcpy(request->root, ".");
+    request->authorized = false;
+
     getHeaders(data, request->headers);
+    
+    getHeaderValue(request->headers, "Authorization", request->authorization);
+    parseAuthorization(request);
 
     char tokenizeData[strlen(data) + 1];
     strcpy(tokenizeData, data);
@@ -87,6 +127,10 @@ Request* parseRequest(int received, char* data, Request* request)
     strcpy(request->method, strtok(tokenizeData, token));
     strcpy(request->path, url_decode(strtok(NULL, token)));
     strcpy(request->relativePath, request->path + 1);
+    strcpy(request->realPath, request->root);
+    strcat(request->realPath, request->path);
+    if(request->realPath[strlen(request->realPath) - 1] == '/')
+        request->realPath[strlen(request->realPath) - 1] = 0;
     strcpy(request->version, strtok(NULL, "\r\n"));
     char* body = safe_strstr(data, "\r\n\r\n");
 
@@ -109,8 +153,8 @@ Request* parseRequest(int received, char* data, Request* request)
     if (request->is_range) {
         sscanf(request->range, "bytes=%zu-%zu", &request->range_start, &request->range_end);
         // Weghalen -> TESTEN
-        if (request->range_end == 1)
-            request->range_end = 0;
+        //if (request->range_end == 1)
+          //  request->range_end = 0;
     }
 
     getHeaderValue(request->headers, "Depth", request->depth);

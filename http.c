@@ -24,6 +24,11 @@ HTTP_STATUS http_status_response(Client* client, int status, char* message,
     return sendAll(client, response) > 0 ? HTTP_OK : HTTP_ERROR;
 }
 
+HTTP_STATUS http_response_200(Client* client)
+{
+    return http_status_response(client, 201, "OK", "OK");
+}
+
 HTTP_STATUS http_response_201(Client* client)
 {
     return http_status_response(client, 201, "OK", "OK");
@@ -33,10 +38,18 @@ HTTP_STATUS http_response_404(Client* client)
     return http_status_response(client, 404, "Not Found", "Not Found");
 }
 
+HTTP_STATUS http_response_401(Client* client){
+    char response[] = "HTTP/1.1 401 Unauthorized\r\n"
+        "WWW-Authenticate: Basic realm=\"WebDav\"\r\n"
+        "Content-Length: 0\r\n\r\n"
+        "\r\n";
+    return sendAll(client, response) > 0 ? HTTP_OK : HTTP_ERROR;
+}
+
 HTTP_STATUS http_html_index(Client* client)
 {
     char document[1024 * 1024];
-    size_t content_length = html_index(document, client->request->relativePath);
+    size_t content_length = html_index(document, client->request->realPath);
     char response[sizeof(document) + 1024];
     sprintf(response, "HTTP/1.1 200 OK\r\n"
                       "Content-Length: %zu\r\n"
@@ -47,7 +60,13 @@ HTTP_STATUS http_html_index(Client* client)
 
 HTTP_STATUS http_options(struct client_info* client)
 {
-    char* response = "HTTP/1.1 200 OK\r\n"
+    Path * info = path_info(client->request->realPath);
+    if(!info->exists)
+    {
+        free(info);
+        return http_response_404(client);
+    } 
+    char response[] = "HTTP/1.1 200 OK\r\n"
                      "Content-Length: 0\r\n"
                      "Content-Type: text/xml\r\n"
                      "Allow: GET, HEAD, PUT, POST, DELETE, PROPFIND, PROPPATCH, "
@@ -59,11 +78,11 @@ HTTP_STATUS http_options(struct client_info* client)
 
 HTTP_STATUS http_mkcol(Client* client)
 {
-    Path* info = path_info(client->request->relativePath);
+    Path* info = path_info(client->request->realPath);
     bool exists = info->exists;
     httpc_free(info);
     if (exists == false)
-        mkdir(client->request->relativePath, 0700);
+        mkdir(client->request->realPath, 0700);
     char response[200];
     sprintf(response, "HTTP/1.1 201 OK\r\nContent-Length: 2\r\n\r\nOK");
     return sendAll(client, response) > 0 ? HTTP_OK : HTTP_ERROR;
@@ -71,9 +90,7 @@ HTTP_STATUS http_mkcol(Client* client)
 
 HTTP_STATUS http_head(Client* client)
 {
-    Path* info = path_info(strlen(client->request->relativePath) == 0
-            ? "."
-            : client->request->relativePath);
+    Path* info = path_info(client->request->realPath);
     bool exists = info->exists;
     size_t size = info->size;
     httpc_free(info);
@@ -83,13 +100,13 @@ HTTP_STATUS http_head(Client* client)
     char response[200];
     sprintf(response,
         "HTTP/1.1 200 OK\r\nContent-Length: %zu\r\nContent-Type: %s\r\n\r\n",
-        size, get_mimetype(client->request->relativePath));
+        size, get_mimetype(client->request->realPath));
     return sendAll(client, response) > 0 ? HTTP_OK : HTTP_ERROR;
 }
 
 HTTP_STATUS http_delete(struct client_info* client)
 {
-    Path* info = path_info(client->request->relativePath);
+    Path* info = path_info(client->request->realPath);
     if (info->exists == false) {
         httpc_free(info);
         return http_response_404(client);
@@ -121,43 +138,46 @@ HTTP_STATUS http_put(struct client_info* client)
 {
     LOG_DEBUG("#%d PUT %zu/%zu/%zu/%zu/%zu\n", client->socket, client->bodyReceived, client->progress->size, client->request->contentLength, client->received, strlen(client->request->headers));
     
+    
+
     if (client->request->bytesLeft == 0 && client->request->contentLength != 0) {
         // No data received
         client->writing = false;
         client->reading = true;
         return 0;
     }
-
-    Path* info = path_info(client->request->relativePath);
+    Path* info = path_info(client->request->realPath);
     bool exists = info->exists;
 
-    if (!exists) {
-        FILE* f = fopen(info->relativePath, "w+");
+    if (!exists && client->request->contentLength == 0) {
+        // Create mode for empty file
+        FILE* f = fopen(info->path, "wb+");
         fclose(f);
     }
 
     if (client->progress->size != client->request->contentLength && client->request->bytesLeft) {
         if (exists && client->progress->size == 0) {
-            unlink(info->relativePath);
+            unlink(info->path);
         }
-        FILE* fd = fopen(client->request->relativePath, "ab+");
+        FILE* fd = fopen(info->path, "ab+");
         fseek(fd, 0L, SEEK_END);
         fwrite(client->request->body, sizeof(char), client->request->bytesLeft, fd);
+        fclose(fd);
         client->progress->size += client->request->bytesLeft;
         client->request->bytesLeft = 0;
 
-        fclose(fd);
     }
 
     httpc_free(info);
+    
+    client->reading = true;
+    client->writing = false;
+        
     if (client->progress->size == client->request->contentLength) {
-
-        char* response = "HTTP/1.1 201 OK\r\nContent-Length: 2\r\n\r\nOK";
-        if (sendAll(client, response) < 1)
-            return 2;
         client->progress->size = 0;
         client->request->bytesLeft = 0;
-        return 1;
+       
+        return http_response_200(client);
     }
     return 0;
 }
@@ -180,8 +200,8 @@ bool valid_path(char* pName)
 int http_propfind(struct client_info* client)
 {
 
-    char* path = client->request->relativePath;
-    Path* info = path_info(path);
+    Path* info = path_info(client->request->realPath);
+
     if (info->exists == false) {
         httpc_free(info);
         return http_response_404(client);
@@ -194,18 +214,22 @@ int http_propfind(struct client_info* client)
     // TODO: move int conversion to request
     int depth = strncmp(client->request->depth, "0", 1) == 0 ? 0 : 1;
     if (info->is_dir == 0 || depth == 0) {
-        strcat(content, xml_response_node(client->request->relativePath));
+        strcat(content, xml_response_node(info->path, client->request->path));
     } else {
-        strcat(content, xml_response_node(client->request->relativePath));
+        strcat(content, xml_response_node(info->path, client->request->path));
+
         DIR* d;
         struct dirent* dir;
-        d = opendir(client->request->relativePath);
+        d = opendir(info->path);
+
         while ((dir = readdir(d)) != NULL) {
             if (!valid_path(dir->d_name))
                 continue;
-            char* fullPath = join_path(client->request->relativePath, dir->d_name);
-            strcat(content, xml_response_node(fullPath));
-            httpc_free(fullPath);
+            char* realPath = join_path(info->path, dir->d_name);
+            char* relativePath = join_path(client->request->path, dir->d_name);
+            strcat(content, xml_response_node(realPath, relativePath));
+            httpc_free(realPath);
+            httpc_free(relativePath);
         }
         closedir(d);
         free(dir);
@@ -270,7 +294,7 @@ HTTP_STATUS http_route_get(Client* client)
         return http_response_static(client);
     }
 
-    Path* info = path_info(client->request->relativePath);
+    Path* info = path_info(client->request->realPath);
     bool exists = info->exists;
     bool is_dir = info->is_dir;
     size_t fileSize = info->size;
@@ -299,7 +323,7 @@ HTTP_STATUS http_route_get(Client* client)
             return 2;
 
         sprintf(buffer, "Content-Type: %s\r\n",
-            get_mimetype(client->request->path));
+            get_mimetype(client->request->realPath));
         if (sendAll(client, buffer) < 1)
             return 2;
 
@@ -319,7 +343,7 @@ HTTP_STATUS http_route_get(Client* client)
     }
 
     if (content_length != client->progress->size) {
-        FILE* fd = fopen(client->request->relativePath, "rb");
+        FILE* fd = fopen(client->request->realPath, "rb");
         size_t offset = client->request->is_range ? client->request->range_start : 0;
         fseek(fd, offset + client->progress->size, SEEK_SET);
         int buffSize = SOCKET_WRITE_BUFFER_SIZE > content_length - client->progress->size
@@ -341,5 +365,8 @@ HTTP_STATUS http_route_get(Client* client)
     if (client->progress->size == content_length) {
         return 1;
     }
+    
+    client->reading = false;
+    client->writing = true;
     return 0;
 }

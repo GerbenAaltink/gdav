@@ -30,9 +30,9 @@ int write_xml_node_size(char * dest, char * name, size_t value){
 }
 
 
-const char * xml_response_node(char* path)
+const char * xml_response_node(char* root, char* path)
 {
-    Path* info = path_info(path);
+    Path* info = path_info(root);
 
     char prop[10240];
     bzero(prop, sizeof(prop));
@@ -70,11 +70,11 @@ const char * xml_response_node(char* path)
     char href[10240];
 
     bzero(href, sizeof(href));
-    char url[10240];
+    //char url[10240];
 
-    bzero(url, sizeof(url));
-    sprintf(url, "/%s", info->path);
-    write_xml_node(href, "href", (char*)url_encode(url));
+    //bzero(url, sizeof(url));
+    //sprintf(url, "/%s", path);
+    write_xml_node(href, "href", (char*)url_encode(path));
 
     static char response[10240];
 

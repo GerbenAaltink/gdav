@@ -4,3 +4,5 @@
 #define SOCKET_READ_BUFFER_SIZE 1024 * 1024
 #define SOCKET_LISTEN 100000
 #define REQUEST_MAX_LENGTH 1024 * 1024 * 2
+
+#define USER_FILE "gdav.users.csv"

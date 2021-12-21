@@ -2,6 +2,8 @@
 #include "log.h"
 #include <stdbool.h>
 
+void args_clean(int argc, char *argv[]);
+
 bool arg_isset(int argc, char* argv[], char* name);
 
 LOGLEVEL get_log_level_arg(int argc, char* argv[]);

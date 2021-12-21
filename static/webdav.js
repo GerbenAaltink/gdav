@@ -150,6 +150,8 @@ Vue.component('davfilelist', {
 		},
 		setUpItem() {
 			let newPath = this['currentPath'].substr(0,this['currentPath'].lastIndexOf("/"));
+            if(newPath == '')
+                newPath = '/';
 			this.upItem = {
 			displayname: "..",
 			href: newPath,
