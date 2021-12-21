@@ -103,17 +103,29 @@ Vue.component('davfilelist', {
 	},
 	props: ['path'],
 	methods: {
+        isVideo(item){
+            return item['href'].endsWith(".mp4") || item['href'].endsWith(".avi") || item['href'].endsWith(".mkv");
+        },
+        playVideo(item){
+            this.playerHref = item['href'];
+			this.playerEnabled = true;
+        },
+        hideVideo(){
+            this.playerEnabled = false;
+        },
+        navigate(item){
+            this.currentPath = item['href'];
+            this.loadData();
+        },
 		onClick(item){
-			this.playerEnabled = false;
-			if(item['href'].endsWith(".mp4") || item['href'].endsWith(".avi") || item['href'].endsWith(".mkv")){
-				this.playerHref = item['href'];
-				this.playerEnabled = true;
-			}
-			if(item['iscollection'] == "1")
+            this.hideVideo();
+			if(this.isVideo(item))
+            {
+			    this.playVideo(item);
+            }else if(item['iscollection'] == "1")
 			{
-			this.currentPath = item.href;
-			this.loadData();
-			}
+			    this.navigate(item);
+            }
 		},
 		async onSearch(what) {
 			this.loading = true;
@@ -153,25 +165,25 @@ Vue.component('davfilelist', {
             if(newPath == '')
                 newPath = '/';
 			this.upItem = {
-			displayname: "..",
-			href: newPath,
-			iscollection: "1"
-			}
+			    displayname: "..",
+			    href: newPath,
+			    iscollection: "1"
+			};
 		},
 		formatSize(item) {
 			if(item.iscollection == "1")
 				return "[DIR]";
 			let size = item.getcontentlength;
 			if(size > 1024 * 1024 * 1024){
-				return (size / (1024 * 1024 * 1024)).toString() + " Gb";
+				return (size / (1024 * 1024 * 1024)).toFixed(2).toString() + " Gb";
 			}
 			if(size > 1024 * 1024){
-				return (size / (1024 * 1024)).toString() + " Mb";
+				return (size / (1024 * 1024)).toFixed(2).toString() + " Mb";
 			}
 			if(size > 1024){
-				return (size / 1024).toString() + " Kb";
+				return (size / 1024).toFixed(2).toString() + " Kb";
 			}
-			
+			alert('aaa');
 				return (size).toString() + " B";
 			
 		},
