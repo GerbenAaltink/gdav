@@ -87,7 +87,7 @@ void parseAuthorization(Request * request){
     size_t olen;
     size_t ilen = strlen(auth_header);
     
-    char * credentials = base64_decode(auth_header, ilen, &olen);
+    char * credentials = (char *)base64_decode(auth_header, ilen, &olen);
     credentials[olen] = 0;
 
     char seperator[] = ":";

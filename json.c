@@ -24,7 +24,7 @@ char * json_escape_string(char * str){
             strcat(result, chrstr);
         }
     }
-    bzero(str, sizeof(str));
+    bzero(str, (size_t)sizeof(str));
     strcpy(str, result);
     return str;
 }
@@ -53,7 +53,7 @@ char * json_unescape_string(char * str){
         strcat(result, strchar);
         
     }
-    bzero(str, sizeof(str));
+    bzero(str, (size_t)sizeof(str));
     strcpy(str, result);
     return str;
 }
@@ -62,7 +62,7 @@ char * json_unescape_string(char * str){
 
 
 char * json_key_value(char * str, char * key, char * value){
-    bzero(str, sizeof(str));
+    bzero(str, (size_t)sizeof(str));
     char strkey[strlen(key) * 2 + 1];
     strcpy(strkey, key);
     char strvalue[strlen(value) * 2 + 1];
@@ -76,7 +76,7 @@ char * json_key_value(char * str, char * key, char * value){
 
 
 char * json_object(char * result, int count, char *values[]){
-    bzero(result, sizeof(result));
+    bzero(result, (size_t)sizeof(result));
     strcpy(result, "{");
     char buff[4096] = ""; 
     for(int i = 0; i < count * 2; i++){
@@ -91,7 +91,7 @@ char * json_object(char * result, int count, char *values[]){
 }
 
 char * json_array(char * result, int count, char *values[]){
-    bzero(result,sizeof(result));
+    bzero(result,(size_t)sizeof(result));
     strcpy(result, "[");
     for(int i = 0; i < count; i++){
         strcat(result, values[i]);
@@ -102,23 +102,3 @@ char * json_array(char * result, int count, char *values[]){
     return result;
 }
 
-int test_json() {
-    char json_str[] = "aa\n\"\n";
-     printf("1:'%s'\n", json_escape_string(json_str));
-    printf("1:'%s'\n", json_unescape_string(json_str));
-    printf("2:'%s'\n", json_escape_string(json_str));
-    printf("2:'%s'\n", json_unescape_string(json_str));
-   printf("1:'%s'\n", json_escape_string(json_str));
-    printf("1:'%s'\n", json_unescape_string(json_str));
-    printf("2:'%s'\n", json_escape_string(json_str));
-    printf("2:'%s'\n", json_unescape_string(json_str));
-    char result[4096];
-    printf(json_key_value(result, json_str, json_str));
-
-    char *kv[] =  {"a","b","c\"","d\nG"};
-    char json_obj_str[4096];
-    printf("%s\n", json_object(json_obj_str, 2, kv));
-        
-    printf("%s\n", json_array(result, 2, (char *[]){json_obj_str, json_obj_str}));
-
-}

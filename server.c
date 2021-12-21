@@ -75,7 +75,7 @@ int handle_read(Client* client)
             LOG_INFO("%s %s %s\n", client->request->method, client->request->path,
                 client->name);
             client->progress->busy = 1;
-            bzero(client->buffer, sizeof(client->buffer));
+            bzero(client->buffer, (size_t)sizeof(client->buffer));
             client->received = 0;
             //client->request->bytesLeft = recvLength - strlen(client->request->headers);
             if (client->request->isPropfind) {

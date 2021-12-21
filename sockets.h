@@ -27,7 +27,7 @@ bool LOG_SEND;
 extern bool LOG_RECV;
 extern bool LOG_SEND;
 
-static int connection_count;
+int connection_count;
 
 int shield(int val);
 SOCKET create_socket(const char* host, const char* port);

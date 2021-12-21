@@ -5,21 +5,21 @@
 #include "utlist.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "functions.h"
 extern User * users;
 extern char user_file[4096];
 extern int user_count;
 
 bool user_cli_userdel(int argc, char *argv[]) {
-    if(argv < 2)
+    if(argc < 2)
         return false;
 
     char username[256];
-    if(argv < 3){
-        int len256 = 256;
-        char line[len256];
+    if(argc < 3){
+        char line[256];
         printf("Username[256]: ");
-        getline(&line, &len256, stdin);
+        readline(line, sizeof(line)-1, stdin);
         strncpy(username, line, strlen(line) - 1);
     }else{
         strcpy(username, argv[2]);
@@ -41,20 +41,17 @@ bool user_cli_useradd(int argc, char *argv[]) {
         return false;
     User * user;
 
-    int len256 = 256;
-    int len4096 = 4096;
 
-    char username[len256];
-    char password[len256];
-    char root[len4096];
+    char username[256];
+    char password[256];
+    char root[4096];
 
     if(argc > 2){
         user = user_get_or_create(argv[2]);
     }else{
 
         printf("Username[256]: ");
-        getline(&username, &len256, stdin);
-
+        readline(username, sizeof(username)-1, stdin);
         user = user_get_or_create(strtrimr(username, '\n'));
     }
     if(argc >= 3)
@@ -62,7 +59,7 @@ bool user_cli_useradd(int argc, char *argv[]) {
         strcpy(password,argv[3]);
     }else{
         printf("Password[256]: ");
-        getline(&password, &len256, stdin);
+        readline(password, sizeof(password) - 1, stdin);
     }
     
     if(argc >= 4)
@@ -70,7 +67,7 @@ bool user_cli_useradd(int argc, char *argv[]) {
         strcpy(root, argv[4]);
     }else{
         printf("Directory[4096]: ");
-        getline(&root, &len256, stdin);
+        readline(root, sizeof(root)-1, stdin);
     }
     
     strcpy(user->password, strtrimr(password, '\n'));
@@ -87,7 +84,7 @@ bool user_cli_useradd(int argc, char *argv[]) {
 bool user_cli_userlist(){
     User * user;
     int index = 0;
-    DL_FOREACH(users, user) printf("%d\t%s\t\t\%s\t\t\%s\n",
+    DL_FOREACH(users, user) printf("%d\t%s\t\t%s\t\t%s\n",
         ++index,
         user->username,
         user->password,
@@ -130,10 +127,10 @@ bool user_load_file(char * path) {
         return false;
 
     size_t read = 0;
-    int len = 5000;
-    char line[len];
+    size_t max_length = 5000;
+    char line[max_length];
     user_count = 0;
-    while((read = getline(&line, &len, fd)) != -1){
+    while((read = readline(line, max_length - 1, fd)) != -1){
         if(strlen(line) < 4)
             continue;
         strtrimr(line,'\n');
@@ -145,7 +142,7 @@ bool user_load_file(char * path) {
         
         DL_APPEND(users, user);
         
-        bzero(line, len);
+        bzero(line, max_length);
         user_count++;
     }
     fclose(fd);
@@ -170,6 +167,7 @@ bool user_write_file(char * path){
     FILE * fd = fopen(user_file, "w+");
     DL_FOREACH(users, user) user_write_line(fd, devider, user);
     fclose(fd);
+    return true;
 }
 
 int user_username_cmp(User * user1, User * user2) {
@@ -238,5 +236,5 @@ bool user_test(){
     user_delete(user->username);
 
     // Save file
-    
-}
+    return true;
+} 

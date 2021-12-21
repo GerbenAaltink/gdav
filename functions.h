@@ -1,5 +1,8 @@
 #pragma once
 #include <stdbool.h>
+#include <stdio.h>
+
+size_t readline(char * line, size_t length, FILE * fd);
 
 char * strtrim(char * str, char chr);
 char * strtriml(char * str, char chr);

@@ -6,13 +6,7 @@ typedef enum LOGLEVEL {
     LOGLEVEL_DEBUG = 2
 } LOGLEVEL;
 
-#ifdef DEBUG
-static int loglevel = 2;
-#elif INFO
-static int loglevel = 1;
-#else
-static int loglevel = 0;
-#endif
+int loglevel;
 
 void set_log_level(LOGLEVEL value);
 

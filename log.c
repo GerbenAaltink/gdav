@@ -3,6 +3,8 @@
 
 #include "log.h"
 
+extern int loglevel;
+
 void set_log_level(LOGLEVEL value) { loglevel = value; }
 
 void log_none(const char* fmt, ...) { }

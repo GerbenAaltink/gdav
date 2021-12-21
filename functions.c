@@ -2,6 +2,15 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
+size_t readline(char * line, size_t length, FILE * fd) {
+    char * buff = (char *)malloc(length);
+    size_t result = getline(&buff, &length, fd);
+    strcpy(line, buff);
+    free(buff);
+    return result;
+}
 
 char * strtrim(char * str, char chr){
     return strtriml(strtrimr(str, chr),chr);

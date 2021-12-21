@@ -1,11 +1,13 @@
 #include <stdlib.h>
+#include <string.h>
 
+#include "log.h"
 #include "args.h"
 #include "functions.h"
 
 void args_clean(int argc, char *argv[]){
     for(int i = 0; i < argc; i++)
-        strcpy(argv[i], strtrim(argv[i],'""'));
+        strcpy(argv[i], strtrim(argv[i],'"'));
 }
 
 bool arg_isset(int argc, char* argv[], char* name)
@@ -31,7 +33,7 @@ LOGLEVEL get_log_level_arg(int argc, char* argv[])
 int get_port_arg(int argc, char* argv[], int default_value)
 {
     if (argc > 1)
-        if (!streq(argv[1], "-"))
+        if (argv[1][0] >= '0' && argv[1][0] <= '9')
             return atoi(argv[1]);
     return default_value;
 }

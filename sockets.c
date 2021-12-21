@@ -3,6 +3,7 @@
 #include "malloc.h"
 
 extern Client* clients;
+extern int connection_count;
 
 int shield(int val)
 {
@@ -164,11 +165,6 @@ Client* accept_client(SOCKET socket)
 {
     Client* client = get_client(-1);
 
-    struct timeval tv;
-    tv.tv_usec = 100;
-
-    // setsockopt (socket, SOL_SOCKET, SO_SNDTIMEO, &tv,
-    //            sizeof tv);
     client->address_length = sizeof(struct sockaddr);
     client->socket = accept(socket, (struct sockaddr*)&client->address,
         &client->address_length);

@@ -1,8 +1,10 @@
-CC = tcc 
-CFLAGS =  *.c static/static.c -o httpc
+CC = cc
+CFLAGS =  *.c static/static.c -o httpc -Wall
 BIN =  ./httpc
 PORT = 8888
-BENCHMARK = ab -c 10 -n 2000 -P x:x
+BENCHMARK = ab -c 10 -n 2000 -P root:root
+
+all: build
 
 shared:
 	cc -fPIC -shared -o httpc.so *.c
@@ -12,39 +14,33 @@ testd:
 	./tests.o
 
 static:
-	cd static/
-	make
-	cd ..
+	$(MAKE) -C static/ all
 	#cc *.c -static -o httpc-static
 
-build: static
+build:
 	$(CC) $(CFLAGS) 
 
-run: static
-	$(CC) $(CFLAGS) 
-	./httpc 8888 --log-recv
+run: static build
+	$(BIN) $(PORT)  
 
-deploy:
+deploy: static build
 	scp httpc root@5.79.65.195:/root/httpc
 
 debug: static
-	DEBUG=1 $(CC) $(CFLAGS) -bench -d -Wall -bt 10 -g -v -vv -MD -D"DEBUG=1"
+	DEBUG=1 $(CC) $(CFLAGS) -Wall -g -MD -D"DEBUG=1"
 	$(BIN) $(PORT) --debug
 
-valgrind: debug
-	valgrind ./httpc
+valgrind: static build
+	valgrind $(BIN) $(PORT) --debug
 
-info: static
-	$(CC) $(CFLAGS) 
-	$(BIN) $(PORT) --info
+test:
+	$(MAKE) -C tests all
 
 link:
 	echo "<html><body><pre>" > public/index.html
 	tcc *.c -E >> public/index.html 
 	echo "</pre></body></html>" >> public/index.html
 	cat public/index.html 
-
-all: link build static shared
 
 format:
 	clang-format -i -style=WebKit *.c *.h
