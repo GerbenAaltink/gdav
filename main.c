@@ -49,8 +49,10 @@ void helptext()
 #ifndef TESTING
 int main(int argc, char* argv[])
 {
+    
     args_clean(argc, argv);
-    user_load_file(USER_FILE);
+
+    user_load_file(USER_FILE); 
     if(user_cli(argc, argv))
     {
         return 0;

@@ -183,8 +183,7 @@ Vue.component('davfilelist', {
 			if(size > 1024){
 				return (size / 1024).toFixed(2).toString() + " Kb";
 			}
-			alert('aaa');
-				return (size).toString() + " B";
+		    return (size).toString() + " B";
 			
 		},
 		sortData(field) {
