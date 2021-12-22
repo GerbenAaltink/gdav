@@ -1,10 +1,10 @@
-CC = cc
+CC = gcc
 CFLAGS =  *.c static/static.c -o httpc -Wall
 BIN =  ./httpc
 PORT = 8888
 BENCHMARK = ab -c 10 -n 2000 -P root:root
 
-all: build
+all: static_resources build
 
 shared:
 	cc -fPIC -shared -o httpc.so *.c
@@ -13,24 +13,28 @@ testd:
 	gcc tests/*.c -o tests.o 
 	./tests.o
 
-static:
-	$(MAKE) -C static/ all
-	#cc *.c -static -o httpc-static
 
-build:
+build: static_resources test
 	$(CC) $(CFLAGS) 
 
-run: static build
+static_resources:
+	$(MAKE) -C static/ all
+	#cc *.c -static -o httpc-static
+release: static_resources test
+	# static does not work with tcc
+	$(CC) $(CFLAGS) -static
+
+run: build
 	$(BIN) $(PORT)  
 
-deploy: static build
+deploy: release
 	scp httpc root@5.79.65.195:/root/httpc
 
-debug: static
+debug: static_resources tests
 	DEBUG=1 $(CC) $(CFLAGS) -Wall -g -MD -D"DEBUG=1"
 	$(BIN) $(PORT) --debug
 
-valgrind: static build
+valgrind: release
 	valgrind $(BIN) $(PORT) --debug
 
 test:
@@ -44,7 +48,9 @@ link:
 
 format:
 	clang-format -i -style=WebKit *.c *.h
-			
+
+bench: bench_propfind bench_get bench_ping
+
 bench_propfind:
 	@echo $BENCHMARK
 	$(BENCHMARK) -m PROPFIND http://localhost:8888/public/

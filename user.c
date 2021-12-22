@@ -1,12 +1,17 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+
+
 #include "user.h"
+
+
+#include "functions.h"
 #include <stdbool.h>
 
 #include "malloc.h"
 #include "utlist.h"
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "functions.h"
 extern User * users;
 extern char user_file[4096];
 extern int user_count;

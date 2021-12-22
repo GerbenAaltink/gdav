@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-size_t readline(char * line, size_t length, FILE * fd) {
+extern size_t readline(char * line, size_t length, FILE * fd) {
     char * buff = (char *)malloc(length);
     size_t result = getline(&buff, &length, fd);
     strcpy(line, buff);

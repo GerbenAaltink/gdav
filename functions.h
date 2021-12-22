@@ -1,6 +1,8 @@
 #pragma once
+
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 size_t readline(char * line, size_t length, FILE * fd);
 

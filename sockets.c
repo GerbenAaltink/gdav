@@ -1,6 +1,7 @@
 
 #include "sockets.h"
 #include "malloc.h"
+#include <netinet/tcp.h>
 
 extern Client* clients;
 extern int connection_count;
@@ -34,7 +35,7 @@ SOCKET create_socket(const char* host, const char* port)
     }
     int reuse = 1;
     setsockopt(socket_listen, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int));
-
+    
     if (bind(socket_listen, bind_address->ai_addr, bind_address->ai_addrlen)) {
         LOG_ERROR("Bind error: %s\n", strerror(errno));
         exit(1);
@@ -70,8 +71,7 @@ int sendAll(Client* client, char* data)
     size_t sent = 0;
 
     while (sent != toSend) {
-        size_t chunkSize = send(client->socket, data + sent, strlen(data + sent), 0);
-
+        size_t chunkSize = send(client->socket, data + sent, toSend - sent, 0);
         if (chunkSize < 1) {
             LOG_ERROR("sendAll error: %s\n", strerror(errno));
             return chunkSize;
@@ -168,6 +168,7 @@ Client* accept_client(SOCKET socket)
     client->address_length = sizeof(struct sockaddr);
     client->socket = accept(socket, (struct sockaddr*)&client->address,
         &client->address_length);
+    
     connection_count++;
     sprintf(client->name, "#%d %s", client->socket, get_client_address(client));
     LOG_DEBUG("Accepted: %s Count: %d\n", client->name, connection_count);
@@ -175,6 +176,7 @@ Client* accept_client(SOCKET socket)
     if (stats.connectionCount > stats.connectionCountMax)
         stats.connectionCountMax = stats.connectionCount;
     client->reading = true;
+    client->writing = true;
     return client;
 }
 
@@ -213,9 +215,10 @@ struct select_result* wait_on_clients(SOCKET server)
 
     struct client_info* ci = clients;
     while (ci) {
-        FD_SET(ci->socket, &result->readers);
+        //if(ci->reading)
+            FD_SET(ci->socket, &result->readers);
         //if(ci->writing)
-        FD_SET(ci->socket, &result->writers);
+            FD_SET(ci->socket, &result->writers);
         FD_SET(ci->socket, &result->errors);
         if (ci->socket > max_socket)
             max_socket = ci->socket;

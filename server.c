@@ -1,5 +1,6 @@
 #include <stdbool.h>
 
+#include "sockets.h"
 #include "http.h"
 #include "log.h"
 #include "server.h"
@@ -33,12 +34,14 @@ void handle_write(Client* client)
         client->request->path, client->name);
 
     client->request->bytesLeft = 0;
-    client->reading = true;
+
     if (close == 0) {
         client->progress->busy = true;
     } else if (close == 1 && client->request->keepAlive) {
         resetClient(client);
+        client->progress->busy = false;
         client->received = 0;
+        client->reading = true;
     } else if (close) {
         drop_client(client);
     }
@@ -84,6 +87,7 @@ int handle_read(Client* client)
             client->writing = true;
             client->reading = false;
         }
+        client->writing = false;
     } else {
         memcpy(client->request->body, data, recvLength);
         client->request->bytesLeft = recvLength;
