@@ -217,7 +217,7 @@ struct select_result* wait_on_clients(SOCKET server)
     while (ci) {
         //if(ci->reading)
             FD_SET(ci->socket, &result->readers);
-        //if(ci->writing)
+       // if(ci->writing)
             FD_SET(ci->socket, &result->writers);
         FD_SET(ci->socket, &result->errors);
         if (ci->socket > max_socket)

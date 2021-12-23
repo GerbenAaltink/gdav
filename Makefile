@@ -14,7 +14,7 @@ testd:
 	./tests.o
 
 
-build: static_resources test
+build: test
 	$(CC) $(CFLAGS) 
 
 static_resources:

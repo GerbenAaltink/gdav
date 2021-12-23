@@ -3,6 +3,7 @@
 #include <string.h>
 #include "base64.h"
 
+#include "log.h"
 #include "request.h"
 #include "url.h"
 #include "user.h"
@@ -89,7 +90,7 @@ void parseAuthorization(Request * request){
     
     char * credentials = (char *)base64_decode(auth_header, ilen, &olen);
     credentials[olen] = 0;
-
+    LOG_DEBUG("Auth: %s\n", credentials);
     char seperator[] = ":";
     if(strlen(credentials))
         strcpy(request->username, strtok(credentials, seperator));

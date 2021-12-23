@@ -12,6 +12,9 @@ typedef struct Path {
     char* mime_type;
     void* head;
     void* next;
+    char created[30];
+    char modified[30];
+    char accessed[30];
 } Path;
 
 Path* path_info(char* path);

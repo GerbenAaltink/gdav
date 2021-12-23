@@ -52,3 +52,4 @@ By smart chunking requests do not block eachother.
  - Remove warnings user.c 
  - .. protection
  - if first parameter starts with -- do not parse port
+ - Request parsing crash if request top line corrupt

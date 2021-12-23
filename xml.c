@@ -46,11 +46,33 @@ const char * xml_response_node(char* root, char* path)
     }
     write_xml_node_int(prop, "isroot", strcmp(path, "/") == 0 ? 1 : 0);
     write_xml_node_int(prop, "ishidden", strncmp(info->name, ".", 1) ? 1 : 0);
-
+    // https://www.greenbytes.de/tech/webdav/draft-reschke-webdav-allprop-include-latest.html
     write_xml_node(prop, "getcontenttype", info->mime_type);
     if (info->is_dir) {
         write_xml_node(prop, "resourcetype", "<D:collection />");
     }
+    write_xml_node(prop, "creationdate", info->created);
+    write_xml_node(prop, "getlastmodified", info->modified);
+    write_xml_node(prop, "lastaccessed", info->accessed);
+
+    char supportedlock[2048];
+    char lockentry[1024];
+
+    bzero(supportedlock, (size_t)sizeof(supportedlock));
+    bzero(lockentry, (size_t)sizeof(lockentry));
+    write_xml_node(lockentry, "lockscope", "<exclusive/>");
+    write_xml_node(lockentry, "locktype", "<write/>");
+    write_xml_node(supportedlock, "lockentry", lockentry);
+
+    bzero(lockentry, (size_t)sizeof(lockentry));
+    write_xml_node(lockentry, "lockscope", "<shared/>");
+    write_xml_node(lockentry, "locktype", "<write/>");
+    write_xml_node(supportedlock, "lockentry", lockentry);
+    
+    write_xml_node(prop, "supportedlock", supportedlock);
+
+
+
 
     char status[10240];
 
@@ -76,11 +98,13 @@ const char * xml_response_node(char* root, char* path)
     //sprintf(url, "/%s", path);
     write_xml_node(href, "href", (char*)url_encode(path));
 
-    static char response[10240];
+    static char response[11264];
 
     bzero(response, sizeof(response));
 
     write_xml_node(response, "response", strcat(href, propstat));
     
+    httpc_free(info);
+
     return response;
 }

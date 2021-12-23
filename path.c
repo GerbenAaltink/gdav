@@ -1,10 +1,22 @@
 #include <string.h>
+#include <stdio.h>
 
 #include "malloc.h"
 #include "path.h"
 
 #include "mimetype.h"
 #include <sys/stat.h>
+
+#include <time.h>
+
+char * unixdate2iso8601(time_t t){
+    static char datestr[30];
+    bzero(datestr, (size_t)sizeof(datestr));
+    struct tm lt;
+    localtime_r(&t, &lt);
+    strftime(datestr, 30, "%Y-%m-%dT%T %Z", &lt); 
+    return datestr;
+}
 
 Path* path_info(char* path)
 {
@@ -35,7 +47,9 @@ Path* path_info(char* path)
         } else {
             result->mime_type = (char*)get_mimetype(path);
         }
-
+        strcpy(result->created, unixdate2iso8601(stbuf.st_ctime));
+        strcpy(result->modified, unixdate2iso8601(stbuf.st_mtime));
+        strcpy(result->accessed, unixdate2iso8601(stbuf.st_atime));
         result->size = stbuf.st_size;
     }
     return result;
