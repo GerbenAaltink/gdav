@@ -6,10 +6,12 @@
 
 size_t readline(char * line, size_t length, FILE * fd);
 
+char * czero(char * val);
+
 char * strtrim(char * str, char chr);
 char * strtriml(char * str, char chr);
 char * strtrimr(char * str, char chr);
 
 bool streq(char* string1, char* string2);
 
-void csprintf(char* target, const char* fmt, ...);
+char * csprintf(char* target, const char* fmt, ...);

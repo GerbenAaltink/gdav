@@ -1,7 +1,10 @@
 #pragma once
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef struct HTTPC_Malloc {
+    bool named;
+    char name[20];
     void* ptr;
     size_t size;
     struct HTTPC_Malloc* next;

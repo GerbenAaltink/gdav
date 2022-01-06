@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS =  *.c static/static.c -o httpc -Wall
+CFLAGS =  *.c static/static.c -o httpc -Wall -luuid
 BIN =  ./httpc
 PORT = 8888
 BENCHMARK = ab -c 10 -n 2000 -P root:root
@@ -32,7 +32,7 @@ deploy: release
 
 debug: static_resources tests
 	DEBUG=1 $(CC) $(CFLAGS) -Wall -g -MD -D"DEBUG=1"
-	$(BIN) $(PORT) --debug
+	$(BIN) $(PORT) --debug --log-recv --log-send
 
 valgrind: release
 	valgrind $(BIN) $(PORT) --debug

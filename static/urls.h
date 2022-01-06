@@ -7,6 +7,7 @@
 #include "roboto_100_300_400_500_700_900_css.h"
 #include "vuetify_min_css.h"
 #include "vue_js.h"
+#include "main_css.h"
 
 const char * gdav_static_urls[] = {
   "/$gdav/static/index.html",
@@ -17,7 +18,8 @@ const char * gdav_static_urls[] = {
   "/$gdav/static/materialdesignicons.min.css",
   "/$gdav/static/roboto_100_300_400_500_700_900.css",
   "/$gdav/static/vuetify.min.css",
-  "/$gdav/static/vue.js"
+  "/$gdav/static/vue.js",
+  "/$gdav/static/main.css"
 };
 const unsigned char * gdav_static_blobs[] = {index_html,
   vuetify_js,
@@ -27,5 +29,6 @@ const unsigned char * gdav_static_blobs[] = {index_html,
   materialdesignicons_min_css,
   roboto_100_300_400_500_700_900_css,
   vuetify_min_css,
-  vue_js};
-const int gdav_static_urls_count = 9;
+  vue_js,
+  main_css};
+const int gdav_static_urls_count = 10;

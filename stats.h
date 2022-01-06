@@ -3,10 +3,16 @@
 #include <stdbool.h>
 
 typedef struct Stats {
-    long bytesSent;
-    long bytesReceived;
-    long connectionCount;
-    long connectionCountMax;
+    unsigned long bytesSent;
+    unsigned long bytesReceived;
+    unsigned long connectionCount;
+    unsigned long connectionCountMax;
+    unsigned long requestCount;
+    unsigned long requestDone;
+    unsigned long requestError;
+    unsigned long requestChunks;
+    unsigned long requestExecuting;
+    
 } Stats;
 
 Stats stats;

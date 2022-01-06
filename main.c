@@ -22,15 +22,11 @@ void set_log_level_arg(int argc, char* argv[])
 
 void exit_handler(int signum)
 {
+    log_unload();
     printf("%s\n", strstat(stats));
-    char* humanized_allocated = humanize_bytes(httpc_allocated);
-    char* humanized_freed = humanize_bytes(httpc_freed);
-    char* humanized_allocated_max = humanize_bytes(httpc_allocated_max);
-
-    printf("Allocated:\t%s\tFreed:\t%s\tMax usage:\t%s\n", humanized_allocated, humanized_freed, humanized_allocated_max);
-    free(humanized_allocated);
-    free(humanized_freed);
-    free(humanized_allocated_max);
+   
+    printf("Allocated:\t%s\tFreed:\t%s\tMax usage:\t%s\n", humanize_bytes(httpc_allocated), humanize_bytes(httpc_freed), humanize_bytes(httpc_allocated_max));
+   
     exit(0);
 }
 

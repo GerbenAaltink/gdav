@@ -65,7 +65,7 @@ Vue.component('davplayer', {
 		}
 	}
 })
-
+// KIM: https://codepen.io/miyukki/pen/dPXeKG
 Vue.component('davfilelist', {
 	name: 'davfilelist',
 	template: `<v-card :loading="loading">

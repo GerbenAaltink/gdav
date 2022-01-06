@@ -137,11 +137,12 @@ Client* get_client(SOCKET s)
     n->progress->busy = 0;
     n->progress->size = 0;
     n->received = 0;
-    n->buffer = (char*)calloc(sizeof(char), REQUEST_MAX_LENGTH + 1);
+    n->buffer = (char*)calloc(sizeof(char), REQUEST_MAX_LENGTH);
     n->buffer[0] = 0;
     n->writeCount = 0;
     n->readCount = 0;
-    n->request = (Request*)calloc(1, sizeof(Request));
+    n->request = request_init();
+    //n->request = (Request *)calloc(sizeof(Request), 1);
 
     if (!n) {
         LOG_ERROR("Out of memory\n");
@@ -189,7 +190,7 @@ void drop_client(struct client_info* client)
             LOG_DEBUG("Closed: %s Count: %d\n", client->name, connection_count);
             if (LOG_STATS)
                 LOG_INFO("%s\n", strstat(stats));
-            free(client->request);
+            httpc_free(client->request);
             free(client->progress);
             free(client->buffer);
             *p = client->next;
@@ -215,9 +216,9 @@ struct select_result* wait_on_clients(SOCKET server)
 
     struct client_info* ci = clients;
     while (ci) {
-        //if(ci->reading)
+        if(ci->reading)
             FD_SET(ci->socket, &result->readers);
-       // if(ci->writing)
+        if(ci->writing)
             FD_SET(ci->socket, &result->writers);
         FD_SET(ci->socket, &result->errors);
         if (ci->socket > max_socket)

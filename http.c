@@ -12,14 +12,63 @@
 #include "path.h"
 #include "static/static.h"
 #include <sys/stat.h>
+#include "lock.h"
+#include "stats.h"
+
+char * http_header_string(Client * client, int status, char * message, size_t content_length){
+    static char header_string[4096];
+    czero(header_string);
+    char keep_alive_string[100];
+    czero(keep_alive_string);
+    if(client->request->keepAlive)
+    {
+        strcpy(keep_alive_string, "Connection: ");
+        strcat(keep_alive_string, client->request->connection);
+        strcat(keep_alive_string, "\r\n");
+    }else{
+        strcpy(keep_alive_string, "");
+    }
+    sprintf(header_string, "HTTP/1.1 %d %s\r\nContent-Length: %zu\r\n%s\r\n", status, message, content_length,
+        keep_alive_string);
+    return header_string;
+}
+
+char * http_header_string_add(char * header_string, char * header_name, char * header_value){
+    if(streq((header_string + strlen(header_string) - 4), "\r\n\r\n"))
+        header_string[strlen(header_string) - 2] = 0;
+    csprintf(header_string, "%s: %s\r\n", header_name, header_value);
+    return header_string;
+}
 
 HTTP_STATUS http_status_response(Client* client, int status, char* message,
     char* body)
-{
-    char response[100 + strlen(body)];
-    sprintf(response, "HTTP/1.1 %d %s\r\nContent-Length: %zu\r\n\r\n", status,
-        message, strlen(body));
-    if (strlen(body))
+{   size_t content_length = strlen(body);
+    char response[4096 + content_length];
+    char keep_alive_string[100];
+    if(client->request->keepAlive)
+    {
+        strcpy(keep_alive_string, "Connection: ");
+        strcat(keep_alive_string, client->request->connection);
+        strcat(keep_alive_string, "\r\n");
+    }else{
+        strcpy(keep_alive_string, "");
+    }
+    sprintf(response, "HTTP/1.1 %d %s\r\nContent-Length: %zu\r\n%s\r\n", status, message, content_length,
+        keep_alive_string);
+    if(content_length)
+        strcat(response, body);
+
+    return sendAll(client, response) > 0 ? HTTP_OK : HTTP_ERROR;
+}
+
+HTTP_STATUS http_status_response2(Client* client, int status, char* message,
+    char* body)
+{   
+    size_t content_length = strlen(body);
+    char * http_headers = http_header_string(client, status, message, content_length);
+    char response[strlen(http_headers) + content_length + 1];
+    strcpy(response, http_headers);
+    if(content_length)
         strcat(response, body);
     return sendAll(client, response) > 0 ? HTTP_OK : HTTP_ERROR;
 }
@@ -39,17 +88,19 @@ HTTP_STATUS http_response_404(Client* client)
 }
 
 HTTP_STATUS http_response_401(Client* client){
+   // char * response = http_header_string(client, 401, "Unauthorized", 0);
+    //http_header_string_add(response, "WWW-Authenticate", "Basic realm=\"WebDav\"");
     char response[] = "HTTP/1.1 401 Unauthorized\r\n"
         "WWW-Authenticate: Basic realm=\"WebDav\"\r\n"
-        "Content-Length: 0\r\n\r\n"
-        "\r\n";
+        "Content-Length: 0\r\n\r\n";
+    //WWW-Authenticate: Digest realm="WebDAV", nonce="Ub6efDfUBQA=51e6dd7c2e919b0c129857c313c83a9799d4e7c7", algorithm=MD5, qop="auth"
     return sendAll(client, response) > 0 ? HTTP_OK : HTTP_ERROR;
 }
 
 HTTP_STATUS http_html_index(Client* client)
 {
     char document[1024 * 1024];
-    size_t content_length = html_index(document, client->request->realPath);
+    size_t content_length = html_index(document, client);
     char response[sizeof(document) + 1024];
     sprintf(response, "HTTP/1.1 200 OK\r\n"
                       "Content-Length: %zu\r\n"
@@ -58,12 +109,42 @@ HTTP_STATUS http_html_index(Client* client)
     return sendAll(client, response) > 0 ? HTTP_OK : HTTP_ERROR;
 }
 
+HTTP_STATUS http_unlock(Client * client) {
+    Lock * lock = lock_check(client->request->realPath);
+    char response[1024];
+    if(lock){
+        lock_delete(lock->id);
+        return http_status_response(client, 204, "Unlocked", "Unlocked");
+    }else{
+        return http_response_404(client);
+    }
+}
+
+HTTP_STATUS http_lock(Client * client) {
+    Path * info = path_info(client->request->realPath);
+    if(!info->exists){
+        // Nothing, does not have to exist
+       // httpc_free(info);
+       // return http_response_404(client);
+    }
+    Lock * lock = lock_create(info->path);
+    char xml_data[1024];
+    sprintf(xml_data, "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<D:prop xmlns:D=\"DAV:\">\n<D:lockdiscovery>\n<D:activelock>\n<D:locktype><D:write/></D:locktype>\n<D:lockscope><D:exclusive/></D:lockscope>\n<D:depth>Infinity</D:depth>\n<D:owner>\n<D:href>%s</D:href>\n</D:owner>\n<D:timeout>Infinite</D:timeout>\n<D:locktoken><D:href>opaquelocktoken:%s</D:href></D:locktoken>\n</D:activelock>\n</D:lockdiscovery>\n</D:prop>\n",lock->id, lock->id);
+    char response[4096];
+    sprintf(response, "HTTP/1.1 201 Created\r\n"
+            "Content-Type: text/xml\r\n"
+            "Lock-Token: <opaquelocktoken:%s>\r\n"
+            "Content-Length: %zu\r\n\r\n%s", lock->id, strlen(xml_data), xml_data);
+    httpc_free(info);
+    return sendAll(client, response) > 0 ? HTTP_OK : HTTP_ERROR;
+}
+
 HTTP_STATUS http_options(struct client_info* client)
 {
     Path * info = path_info(client->request->realPath);
     if(!info->exists)
     {
-        free(info);
+        httpc_free(info);
         return http_response_404(client);
     } 
     char response[] = "HTTP/1.1 200 OK\r\n"
@@ -73,6 +154,7 @@ HTTP_STATUS http_options(struct client_info* client)
                      "MKCOL, LOCK, UNLOCK, MOVE, COPY\r\n"
                      "DAV: 1,2\r\n"
                      "MS-Author-Via: DAV\r\n\r\n";
+    httpc_free(info);
     return sendAll(client, response) > 0 ? 1 : 2;
 }
 
@@ -117,6 +199,37 @@ HTTP_STATUS http_delete(struct client_info* client)
         unlink(info->path);
     httpc_free(info);
     return http_response_201(client);
+}
+
+HTTP_STATUS http_move(Client * client) {
+    // Validate source
+    Path * source = path_info(client->request->realPath);
+    bool sourceValid = source->exists;
+    free(source);
+    if(!sourceValid){
+        return http_response_404(client);
+    }
+    
+    // Valiate destination
+    Path * destination = path_info(client->request->realDestination);
+    bool conflict = destination->exists && !client->request->overwrite;
+    free(destination);
+    if(conflict){
+        return http_status_response(client, 502, "Conflict","File already exists.");
+    }
+
+    // Move
+    int error = rename(client->request->realPath, client->request->realDestination);
+    char message[10000];
+
+    if(error){
+        sprintf(message, "Error moving %s to %s. Error code: %d", client->request->path, client->request->destination, error);
+        return http_status_response(client, 500, "OK", message);
+    }
+
+    sprintf(message, "Moved %s to %s", client->request->path, client->request->destination);
+    return http_status_response(client, 200, "OK", message);
+    
 }
 
 int drain(Client* client)
@@ -206,13 +319,13 @@ int http_propfind(struct client_info* client)
         httpc_free(info);
         return http_response_404(client);
     }
-    char content[1024*1024];
+    char content[1024*4096];
     char xml_header[] = "<?xml version=\"1.0\" encoding=\"utf-8\" "
                         "?><D:multistatus xmlns:D=\"DAV:\">";
     strcpy(content, xml_header);
 
     // TODO: move int conversion to request
-    int depth = strncmp(client->request->depth, "0", 1) == 0 ? 0 : 1;
+    int depth = client->request->depth;
     if (info->is_dir == 0 || depth == 0) {
         strcat(content, xml_response_node(info->path, client->request->path));
     } else {
@@ -286,10 +399,18 @@ HTTP_STATUS http_response_static(Client* client)
     return 0;
 }
 
+HTTP_STATUS http_route_stats(Client * client) {
+    char document[10240];
+    stats_html(stats, document);
+    return http_status_response(client, 200, "OK", document);
+}
+
 HTTP_STATUS http_route_get(Client* client)
 {
     if (streq(client->request->path, "/ping"))
         return http_status_response(client, 200, "PONG", "PONG");
+    if (streq(client->request->path, "/$gdav/stats"))
+        return http_route_stats(client);
     if (gdav_static_match(client->request->path) != -1) {
         return http_response_static(client);
     }
@@ -331,6 +452,12 @@ HTTP_STATUS http_route_get(Client* client)
         if (sendAll(client, buffer) < 1)
             return 2;
 
+        if(client->request->keepAlive)
+        {
+            sprintf(buffer, "Connection: %s\r\n", client->request->connection);
+            if(sendAll(client, buffer) < 1)
+                return HTTP_ERROR;
+        }
         if (client->request->is_range) {
             sprintf(buffer, "Content-Range: bytes %zu-%zu/%zu\r\n", client->request->range_start, range_end, fileSize);
             if (sendAll(client, buffer) < 1)

@@ -12,6 +12,11 @@ extern size_t readline(char * line, size_t length, FILE * fd) {
     return result;
 }
 
+char * czero(char * val) {
+    bzero(val,sizeof(val) - 1);
+    return val;
+}
+
 char * strtrim(char * str, char chr){
     return strtriml(strtrimr(str, chr),chr);
 }
@@ -41,7 +46,7 @@ bool streq(char* string1, char* string2)
     return strcmp(string1, string2) == 0;
 }
 
-void csprintf(char* target, const char* fmt, ...)
+char * csprintf(char* target, const char* fmt, ...)
 {
     char buffer[4096];
     va_list args;
@@ -49,4 +54,5 @@ void csprintf(char* target, const char* fmt, ...)
     vsprintf(buffer, fmt, args);
     va_end(args);
     strcat(target, buffer);
+    return target;
 }

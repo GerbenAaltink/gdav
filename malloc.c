@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
 #include "log.h"
 #include "malloc.h"
 #include "utlist.h"
+#include "config.h"
 
 extern size_t httpc_allocated;
 extern size_t httpc_freed;
@@ -11,34 +12,29 @@ extern size_t httpc_allocated_max;
 
 int ptrcmp(HTTPC_Malloc* a, HTTPC_Malloc* b)
 {
-     return a->ptr == b->ptr ? 0 : 1;
+     return !(a->ptr == b->ptr);
 }
 
-void* _httpc_malloc(int size)
-{
-    void* ptr = malloc(size);
-    return ptr;
+
+HTTPC_Malloc * httpc_malloc_append() {
+    HTTPC_Malloc* m = malloc(sizeof(HTTPC_Malloc));
+    DL_APPEND(httpc_malloced, m);
+    return m;
 }
 
-void _httpc_free(void* ptr)
-{
-    free(ptr);
-}
-
+#if HTTPC_MALLOC_ENABLED
 void* httpc_malloc(size_t size)
 {
     httpc_allocated += size;
-    HTTPC_Malloc* m = malloc(sizeof(HTTPC_Malloc));
+    HTTPC_Malloc* m = httpc_malloc_append();
     void* result = malloc(size);
     m->ptr = result;
     m->size = size;
-    DL_APPEND(httpc_malloced, m);
     LOG_DEBUG("Malloc: %p allocated %zu bytes\n", result, m->size);
     if (httpc_allocated > httpc_allocated_max)
         httpc_allocated_max = httpc_allocated;
     return result;
 }
-
 void httpc_free(void* ptr)
 {
     HTTPC_Malloc* result;
@@ -52,9 +48,17 @@ void httpc_free(void* ptr)
         DL_DELETE(httpc_malloced, result);
         httpc_allocated -= size;
         LOG_DEBUG("Malloc: %p freed %zu bytes\n", ptr, size);
-        free(result);
     } else {
         LOG_ERROR("Malloc: failed free for pointer. Double free?\n");
     }
     free(temp);
 }
+#else
+void * httpc_malloc(size_t size){
+    return malloc(size);
+}
+void httpc_free(void * ptr){
+    free(ptr);
+}
+#endif
+

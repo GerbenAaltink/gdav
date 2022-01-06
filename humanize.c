@@ -3,14 +3,16 @@
 #include "humanize.h"
 #include <stdio.h>
 
-char* humanize_bytes(size_t bytes)
+char* humanize_bytes(size_t bbytes)
 {
     char suffix[3];
     double value;
 
-    double gb = 1024 * 1024 * 1024;
-    double mb = 1024 * 1024;
-    double kb = 1024;
+    float bytes = bbytes;
+
+    double gb = 1024.0 * 1024.0 * 1024.0;
+    double mb = 1024.0 * 1024.0;
+    double kb = 1024.0;
 
     if (bytes > gb) {
         strcpy(suffix, "GB");
@@ -25,7 +27,7 @@ char* humanize_bytes(size_t bytes)
         strcpy(suffix, "b");
         value = bytes;
     }
-    char* result = (char*)malloc(100);
-    sprintf(result, "%2.f %s", value, suffix);
+    static char result[100];
+    sprintf(result, "%10.2f %s", value, suffix);
     return result;
 }

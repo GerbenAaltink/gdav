@@ -1,55 +1,102 @@
 #include <stdbool.h>
-
+#include "stats.h"
 #include "sockets.h"
 #include "http.h"
 #include "log.h"
 #include "server.h"
 #include "user.h"
+#include "http_method.h"
+
+HTTP_STATUS http_route(Client * client){
+    switch(client->request->method) {
+            case HTTP_METHOD_LOCK:
+                return http_lock(client);
+            case HTTP_METHOD_UNLOCK:
+                return http_unlock(client);
+            case HTTP_METHOD_GET:
+                return http_route_get(client);
+            case HTTP_METHOD_PROPFIND:
+                return http_propfind(client);
+            case HTTP_METHOD_OPTIONS:
+                return http_options(client);
+            case HTTP_METHOD_DELETE:
+                return http_delete(client);
+            case HTTP_METHOD_HEAD:
+                return http_head(client);
+            case HTTP_METHOD_PUT:
+                return http_put(client);
+            case HTTP_METHOD_MKCOL:
+                return http_mkcol(client);
+            case HTTP_METHOD_MOVE:
+                return http_move(client);
+    }
+    http_status_response(client, "405", "Not Allowed", "HTTP Method is not implemented");
+    return HTTP_ERROR;
+}
 
 void handle_write(Client* client)
 {
-    int close = 2;
+    HTTP_STATUS status = HTTP_ERROR;
     
-    bool authorization_required = user_count > 0;
+    bool authorization_required = user_count > 0 && !client->request->authorized;
 
-    if(authorization_required && !client->request->authorized)
+    if(authorization_required)
     {
-        close = http_response_401(client);
-    }else if(client->request->isGet) {
-        close = http_route_get(client);
-    }else if(client->request->isPropfind) {
-        close = http_propfind(client);
-    }else if (client->request->isOptions) {
-        close = http_options(client);
-    }else if (client->request->isDelete) {
-        close = http_delete(client);
-    }else if (client->request->isHead) {
-        close = http_head(client);
-    }else if (client->request->isPut) {
-        close = http_put(client);
-    }else if (client->request->isMkcol) {
-        close = http_mkcol(client);
+        status = http_response_401(client);
+        LOG_INFO("Authentication failed for %s", client->request->username);
+    }else{
+        status = http_route(client);   
+        if(status == HTTP_BUSY)
+            LOG_DEBUG("BUSY");
+        else if(status == HTTP_ERROR)
+            LOG_ERROR("ERROR");
+        else if(status == HTTP_OK)
+            LOG_INFO("DONE");
     }
-    LOG_DEBUG("Done %d %s %s %s\n", close, client->request->method,
-        client->request->path, client->name);
+
 
     client->request->bytesLeft = 0;
 
-    if (close == 0) {
+    if (status == HTTP_BUSY) {
         client->progress->busy = true;
-    } else if (close == 1 && client->request->keepAlive) {
+    } else if (status == HTTP_OK && client->request->keepAlive) {
         resetClient(client);
         client->progress->busy = false;
         client->received = 0;
         client->reading = true;
-    } else if (close) {
+        client->writing = false;
+    } else {
         drop_client(client);
     }
+    switch(status) {
+        case HTTP_OK:
+            stats.requestExecuting--;
+            stats.requestDone++;
+            break;
+        case HTTP_ERROR:
+            stats.requestExecuting--;
+            stats.requestError++;
+            break;
+        case HTTP_BUSY:
+            stats.requestChunks++;
+            break;
+    }
+}
+
+void update_log_prefix(Client * client) {
+    char prefix[10000];
+    
+    strcpy(prefix, client->name);
+    strcat(prefix, " ");
+    if(client->progress->busy)
+        strcat(prefix, client->request->repr);
+    else
+        strcat(prefix, "READ");
+    log_set_prefix(prefix);
 }
 
 int handle_read(Client* client)
 {
-
     int buffSize = SOCKET_READ_BUFFER_SIZE;
     if (client->progress->busy == true) {
         if (client->request->contentLength - client->progress->size < SOCKET_READ_BUFFER_SIZE)
@@ -74,20 +121,26 @@ int handle_read(Client* client)
         strcat(client->buffer, data);
         if (str_index(client->buffer, "\r\n\r\n") != -1) {
             parseRequest(client->received, client->buffer, client->request);
+            
             client->hasRequest = true;
-            LOG_INFO("%s %s %s\n", client->request->method, client->request->path,
-                client->name);
             client->progress->busy = 1;
+
+            LOG_INFO("%s %s\n", client->request->repr, client->name);
             bzero(client->buffer, (size_t)sizeof(client->buffer));
             client->received = 0;
+            
             //client->request->bytesLeft = recvLength - strlen(client->request->headers);
-            if (client->request->isPropfind) {
+            if (client->request->method == HTTP_METHOD_PROPFIND) {
                 drain(client);
             }
             client->writing = true;
             client->reading = false;
+            stats.requestCount++;
+            stats.requestExecuting++;
+        }else{
+            client->writing = false;
         }
-        client->writing = false;
+
     } else {
         memcpy(client->request->body, data, recvLength);
         client->request->bytesLeft = recvLength;
@@ -105,6 +158,7 @@ int serve(const char* host, const char* port)
         select_result* selected = wait_on_clients(server);
         if (FD_ISSET(server, &selected->readers)) {
             Client* client = accept_client(server);
+            update_log_prefix(client);
             if (!ISVALIDSOCKET(client->socket)) {
                 LOG_ERROR("Accept error: %d\n", GETSOCKETERRNO);
                 return 1;
@@ -114,6 +168,7 @@ int serve(const char* host, const char* port)
         Client* client = clients;
         while (client) {
             Client* next = client->next;
+            update_log_prefix(client);
             if (FD_ISSET(client->socket, &selected->errors)) {
                 drop_client(client);
                 client = next;
@@ -121,16 +176,16 @@ int serve(const char* host, const char* port)
             }
             if (FD_ISSET(client->socket, &selected->readers)) {
                 bool success = handle_read(client) > 0;
+                update_log_prefix(client);
                 if (!success) {
                     drop_client(client);
                     client = next;
                     continue;
                 }
             }
-
             if (client->progress->busy == true && FD_ISSET(client->socket, &selected->writers)) {
                 handle_write(client);
-                
+                update_log_prefix(client);
             }
 
             client = next;
