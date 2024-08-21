@@ -37,7 +37,7 @@ const char * xml_response_node(char* root, char* path)
     char prop[10240];
     bzero(prop, sizeof(prop));
 
-    write_xml_node(prop, "displayname", info->name);
+    write_xml_node(prop, "displayname", (char *)url_encode(info->name));
     write_xml_node_int(prop, "iscollection", info->is_dir ? 1 : 0);
     if (info->is_dir) {
         write_xml_node(prop, "getcontentlength", "-DIR-");

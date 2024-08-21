@@ -35,7 +35,7 @@ debug: static_resources tests
 	$(BIN) $(PORT) --debug --log-recv --log-send
 
 valgrind: release
-	valgrind $(BIN) $(PORT) --debug
+	valgrind -s $(BIN) $(PORT) --debug
 
 test:
 	$(MAKE) -C tests all

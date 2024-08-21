@@ -3,7 +3,7 @@
 #include "malloc.h"
 #include <netinet/tcp.h>
 
-extern Client* clients;
+extern Client* clients = 0;
 extern int connection_count;
 
 int shield(int val)
@@ -213,7 +213,6 @@ struct select_result* wait_on_clients(SOCKET server)
     FD_SET(server, &result->readers);
 
     SOCKET max_socket = server;
-
     struct client_info* ci = clients;
     while (ci) {
         if(ci->reading)

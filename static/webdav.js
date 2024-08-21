@@ -9,11 +9,12 @@ class WebDav {
 	}
 	propfind(url) {
 		return fetch(url, {
-			method: 'PROPFIND' }).then(async(response)=>{                                                      const body = await response.text();
+			method: 'PROPFIND' }).then(async(response)=>{                                                      
+				const body = await response.text();
+				console.info(body)
 				const parser = new window.DOMParser().parseFromString(body, "text/xml");  
 			let result = {items: [], count:0};
 			parser.querySelectorAll('response').forEach((el)=>{
-				
 				let item = {};
 				item['href'] = el.querySelector('href').innerHTML;
 				

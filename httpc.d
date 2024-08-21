@@ -3,8 +3,8 @@ httpc: static/static.c /usr/include/stdc-predef.h static/static.h \
  static/materialdesignicons_css_map.h static/vuetify_js_map.h \
  static/webdav_js.h static/materialdesignicons_min_css.h \
  static/roboto_100_300_400_500_700_900_css.h static/vuetify_min_css.h \
- static/vue_js.h /usr/lib/gcc/x86_64-linux-gnu/9/include/stdbool.h \
- /usr/include/stdlib.h \
+ static/vue_js.h static/main_css.h \
+ /usr/lib/gcc/x86_64-linux-gnu/9/include/stdbool.h /usr/include/stdlib.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \

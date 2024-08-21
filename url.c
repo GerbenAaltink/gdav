@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-const char* URL_SPECIAL_CHARACTERS = "$%[]\\+=<>\"'~() ";
+const char* URL_SPECIAL_CHARACTERS = "$%[]\\+=<>\"'~()& ";
 
 bool is_special_url_char(char chr)
 {
